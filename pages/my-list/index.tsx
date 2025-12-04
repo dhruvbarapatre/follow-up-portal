@@ -2,13 +2,13 @@
 import React, { useEffect, useState } from "react";
 import { Phone, MessageCircle, UserPlus, X } from "lucide-react";
 import { useSelector } from "react-redux";
-import EditCustomerModal from "./EditCustomerModal";
-import AssignModal from "./AssignModal";
-import UserCard from "./User-card";
-import CustomerTable from "./CustomerTable";
+import EditCustomerModal from "../../components/my-list-com/EditCustomerModal";
+import AssignModal from "../../components/my-list-com/AssignModal";
+import UserCard from "../../components/my-list-com/User-card";
 import { toast } from "react-toastify";
-import { PersistData } from "./types";
+import { PersistData } from "../../components/my-list-com/types";
 import API from "@/components/apiClient";
+import CustomerTable from "@/components/my-list-com/CustomerTable";
 
 const UserListPage = () => {
   const auth = useSelector((s: PersistData) => s.auth);

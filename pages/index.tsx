@@ -4,7 +4,7 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { loginSuccess } from "@/components/slices/authSlice";
 import { useRouter } from "next/router";
-import { PersistData } from "./my-list/types";
+import { PersistData } from "../components/my-list-com/types";
 
 axios.defaults.withCredentials = true;
 
