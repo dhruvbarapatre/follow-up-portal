@@ -1,10 +1,10 @@
 "use client";
 import { X, UserPlus } from "lucide-react";
 import { useState } from "react";
-import API  from "./apiClient";
 import { toast, ToastContainer } from "react-toastify";
 import { useSelector } from "react-redux";
 import { PersistData } from "./types";
+import API from "@/components/apiClient";
 
 // declare global {
 //   interface Window {

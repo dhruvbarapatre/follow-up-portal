@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X, Phone, MessageCircle } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
-import  API  from "./apiClient";
+import API from "@/components/apiClient";
 
 export default function EditCustomerModal({
   customer,
