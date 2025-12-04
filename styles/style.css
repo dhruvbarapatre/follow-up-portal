@@ -1,0 +1,160 @@
+/* -------------------------------
+   GENERAL UTILITY
+--------------------------------*/
+.scrollable-content {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.scrollable-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb {
+  background: #c8c8c8;
+  border-radius: 6px;
+}
+
+.scrollable-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* -------------------------------
+   MODAL IMPROVEMENTS
+--------------------------------*/
+.modal-content {
+  border-radius: 16px !important;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal.show {
+  display: block !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* -------------------------------
+   BADGE STYLING
+--------------------------------*/
+.badge {
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
+/* For assigned and good connection badges */
+.badge.bg-primary {
+  background-color: #0d6efd !important;
+  color: white;
+  border-radius: 8px;
+}
+
+/* -------------------------------
+   CARD LIST VIEW
+--------------------------------*/
+.card {
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-body h5 {
+  font-weight: 600;
+}
+
+.card-body small {
+  font-size: 12px;
+}
+
+/* -------------------------------
+   TABLE STYLE
+--------------------------------*/
+.table-hover tbody tr:hover {
+  background-color: #f2f8ff;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #fafafa;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
+/* -------------------------------
+   BUTTON ROUNDING + STYLE
+--------------------------------*/
+.btn.rounded-pill {
+  border-radius: 50rem !important;
+}
+
+.btn-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* -------------------------------
+   ASSIGN SECTION
+--------------------------------*/
+.assigned-badge {
+  display: inline-flex;
+  padding: 6px 10px;
+  align-items: center;
+  gap: 6px;
+  background-color: #0d6efd;
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* -------------------------------
+   EMPTY STATE
+--------------------------------*/
+.empty-box {
+  padding: 25px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  text-align: center;
+  color: #777;
+  font-size: 14px;
+}
+
+/* -------------------------------
+   INPUT STYLE
+--------------------------------*/
+input.form-control,
+select.form-select,
+textarea.form-control {
+  border-radius: 8px !important;
+}
+
+/* -------------------------------
+   RESPONSIVE
+--------------------------------*/
+@media (max-width: 576px) {
+  .btn.rounded-pill {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .modal-dialog {
+    margin: 10px !important;
+  }
+}
