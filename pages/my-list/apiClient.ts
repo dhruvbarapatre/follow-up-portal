@@ -6,8 +6,7 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-export default API = {
-  // USERS
+const API = {
   getAllUsers: (token: string, userType: string) => api.post("/user/get-all-user", {
     token, userType
   }),
@@ -25,3 +24,6 @@ export default API = {
   // ADMIN
   getAdmins: () => api.get("/admins/get-admins"),
 };
+
+export default API;
+
