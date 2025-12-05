@@ -109,38 +109,6 @@ const UserListPage = () => {
         )}
       </div>
 
-      {/* ===================== USERS ===================== */}
-      {(auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") && (
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold">Users</h1>
-            <span className="px-3 py-1 bg-blue-600 text-white text-sm rounded-full">
-              {users.length} Users
-            </span>
-          </div>
-
-          {loadingUsers ? (
-            <Loader />
-          ) : (
-            <div className="grid md:grid-cols-2 gap-4">
-              {users.length === 0 ? (
-                <p className="text-center text-gray-500 py-4 col-span-full">
-                  No users found.
-                </p>
-              ) : (
-                users.map((u: any) => (
-                  <UserCard
-                    key={u._id}
-                    user={u}
-                    onOpen={() => setSelectedUser(u)}
-                  />
-                ))
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* ===================== UNRESERVED CUSTOMERS ===================== */}
       {(auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") && (
         <div>
@@ -182,6 +150,40 @@ const UserListPage = () => {
           )}
         </div>
       )}
+
+      {/* ===================== USERS ===================== */}
+      {(auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold">Users</h1>
+            <span className="px-3 py-1 bg-blue-600 text-white text-sm rounded-full">
+              {users.length} Users
+            </span>
+          </div>
+
+          {loadingUsers ? (
+            <Loader />
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+              {users.length === 0 ? (
+                <p className="text-center text-gray-500 py-4 col-span-full">
+                  No users found.
+                </p>
+              ) : (
+                users.map((u: any) => (
+                  <UserCard
+                    key={u._id}
+                    user={u}
+                    onOpen={() => setSelectedUser(u)}
+                  />
+                ))
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+
 
 
       {/* ===================== MODALS ===================== */}

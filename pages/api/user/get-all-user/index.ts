@@ -36,9 +36,6 @@ export default async function handler(req: AuthRequest, res: NextApiResponse) {
             error: err.message,
         });
     }
-    if (req.userData.role !== "superAdmin" || req.userData.role !== "admin") {
-        return res.status(403).json({ message: "Access denied. Not an admin." });
-    }
     try {
         const users = await userModel.find({});
         if (!users.length) {

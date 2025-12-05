@@ -14,15 +14,11 @@ export default async function handler(req: AuthRequest, res: NextApiResponse) {
 
     try {
         await dbConnect();
-        await dbConnectCongrigation();
+        // await dbConnectCongrigation();
 
         // ⛔ req.userData will NOT exist unless your auth middleware attaches it
         if (!req.userData) {
             return res.status(401).json({ message: "Unauthorized. No user data found." });
-        }
-
-        if (req.userData.role !== "superAdmin") {
-            return res.status(403).json({ message: "Access denied. Not an admin." });
         }
 
         const users = await CustomerModel.find({});
