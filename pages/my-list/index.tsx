@@ -33,7 +33,7 @@ const UserListPage = () => {
   const loadUsers = async () => {
     setLoadingUsers(true);
     try {
-      const res = await API.getAllUsers(auth.token,auth.user.userType);
+      const res = await API.getAllUsers(auth.token, auth.user.userType);
       setUsers(res.data.data || []);
     } catch {
       toast.error("Failed to load users");
@@ -47,7 +47,7 @@ const UserListPage = () => {
   const loadUnreserved = async () => {
     setLoadingUnreserved(true);
     try {
-      const res = await API.getUnReserved(auth.token,auth.user.userType);
+      const res = await API.getUnReserved(auth.token, auth.user.userType);
       setUnreserved(res.data.data || []);
     } catch {
       toast.error("Failed to load unreserved list");
@@ -61,7 +61,7 @@ const UserListPage = () => {
   const loadCustomerList = async () => {
     setLoadingCustomerList(true);
     try {
-      const res = await API.getUserList(auth.user.id,auth.user.userType);
+      const res = await API.getUserList(auth.user.id, auth.user.userType);
       setCustomerList(res.data.data || []);
     } catch {
       toast.error("Failed to load customer list");
@@ -86,6 +86,28 @@ const UserListPage = () => {
 
   return (
     <div className="p-6 space-y-10">
+      {/* ===================== CUSTOMER LIST ===================== */}
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Customer List</h2>
+          <span className="px-3 py-1 bg-sky-300 text-sm rounded-full">
+            {customerList.length} Customers
+          </span>
+        </div>
+
+        {loadingCustomerList ? (
+          <Loader />
+        ) : customerList.length === 0 ? (
+          <p className="text-gray-500 text-center py-4">
+            No customers found.
+          </p>
+        ) : (
+          <CustomerTable
+            list={customerList}
+            onEdit={(c: any) => setEditCustomer(c)}
+          />
+        )}
+      </div>
 
       {/* ===================== USERS ===================== */}
       {(auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") && (
@@ -120,7 +142,7 @@ const UserListPage = () => {
       )}
 
       {/* ===================== UNRESERVED CUSTOMERS ===================== */}
-      {(auth?.user?.role === "superAdmin" || auth?.user?.role === "admin" ) && (
+      {(auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") && (
         <div>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Unreserved Customers</h2>
@@ -161,28 +183,6 @@ const UserListPage = () => {
         </div>
       )}
 
-      {/* ===================== CUSTOMER LIST ===================== */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Customer List</h2>
-          <span className="px-3 py-1 bg-sky-300 text-sm rounded-full">
-            {customerList.length} Customers
-          </span>
-        </div>
-
-        {loadingCustomerList ? (
-          <Loader />
-        ) : customerList.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">
-            No customers found.
-          </p>
-        ) : (
-          <CustomerTable
-            list={customerList}
-            onEdit={(c: any) => setEditCustomer(c)}
-          />
-        )}
-      </div>
 
       {/* ===================== MODALS ===================== */}
       {assignCustomer && (
