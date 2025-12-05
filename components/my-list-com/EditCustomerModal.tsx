@@ -149,11 +149,17 @@ export default function EditCustomerModal({
 
   // WhatsApp
   const openWhatsapp = () => {
-    const raw = edited.phoneNumber || "";
-    const cleaned = raw.replace(/\D/g, "");
-    const finalNum = cleaned.startsWith("91") ? cleaned : `91${cleaned}`;
-    window.open(`https://wa.me/${finalNum}`, "_blank");
-  };
+  const raw = (edited.phoneNumber || original.phoneNumber || "").toString();
+  const cleaned = raw.replace(/\D/g, "");
+
+  if (!cleaned) {
+    toast.error("Invalid phone number");
+    return;
+  }
+
+  const finalNum = cleaned.startsWith("91") ? cleaned : `91${cleaned}`;
+  window.open(`https://wa.me/${finalNum}`, "_blank");
+};
 
   return (
     <>
