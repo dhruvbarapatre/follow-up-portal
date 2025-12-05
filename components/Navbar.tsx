@@ -107,7 +107,7 @@ const Header: React.FC = () => {
                         </button>
                     )}
 
-                    {(isAdmin) && (
+                    {(isAdmin && userRole == "superAdmin") && (
                         <button
                             onClick={() => navigateTo("/sign-up")}
                             className="text-left py-2 px-3 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 font-medium"

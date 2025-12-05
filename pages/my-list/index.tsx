@@ -70,7 +70,7 @@ const UserListPage = () => {
   };
 
   useEffect(() => {
-    if (auth?.user?.role === "superAdmin") {
+    if (auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") {
       loadUsers();
       loadUnreserved();
     }
@@ -88,7 +88,7 @@ const UserListPage = () => {
     <div className="p-6 space-y-10">
 
       {/* ===================== USERS ===================== */}
-      {auth?.user?.role === "superAdmin" && (
+      {(auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") && (
         <div>
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-2xl font-bold">Users</h1>
@@ -120,7 +120,7 @@ const UserListPage = () => {
       )}
 
       {/* ===================== UNRESERVED CUSTOMERS ===================== */}
-      {auth?.user?.role === "superAdmin" && (
+      {(auth?.user?.role === "superAdmin" || auth?.user?.role === "admin" ) && (
         <div>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Unreserved Customers</h2>
