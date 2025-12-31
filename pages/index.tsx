@@ -94,7 +94,7 @@ const Home: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-6 sm:p-10 font-inter min-h-screen bg-gray-50">
+    <div className="p-6 sm:p-10 font-inter bg-gray-50" style={{minHeight:"-webkit-fill-available"}}>
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row justify-center gap-6">
 

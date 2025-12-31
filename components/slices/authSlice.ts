@@ -26,9 +26,22 @@ interface LoginPayload {
   userType?: string;
 }
 
+interface UserTypePayload {
+  usertype?: string;
+}
+
+const initialStateForUser: LoginPayload = {
+  id: '',
+  name: '',
+  phone: '',
+  token: '',
+  role: '',
+  userType: '',
+}
+
 // 4. Define the initial state using the AuthState interface
 const initialState: AuthState = {
-  user: null,
+  user: initialStateForUser,
   token: null,
   isLoggedIn: false,
 };
@@ -45,16 +58,20 @@ const authSlice = createSlice({
       state.token = token; // Store token separately
       state.isLoggedIn = true;
     },
-
+    userTypeChange(state, action: PayloadAction<UserTypePayload>) {
+      if (state.user) {
+        state.user.userType = action.payload.usertype;
+      }
+    },
     // logout uses PayloadAction without any specific payload (void)
     logout(state) {
       // Reset the state to log the user out
-      state.user = null;
+      state.user = initialStateForUser;
       state.token = null;
       state.isLoggedIn = false;
     },
   },
 });
 
-export const { loginSuccess, logout } = authSlice.actions;
+export const { loginSuccess, logout, userTypeChange } = authSlice.actions;
 export default authSlice.reducer;

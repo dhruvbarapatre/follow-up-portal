@@ -6,7 +6,6 @@ export default function CustomerTable({ list, onEdit }: any) {
       <table className="min-w-full text-sm">
         <thead className="bg-sky-100">
           <tr>
-            <th className="px-4 py-3 text-left font-semibold">#</th>
             <th className="px-4 py-3 text-left font-semibold">Name</th>
             <th className="px-4 py-3 text-left font-semibold">Phone</th>
             <th className="px-4 py-3 text-left font-semibold">Action</th>
@@ -28,7 +27,6 @@ export default function CustomerTable({ list, onEdit }: any) {
               key={c._id}
               className="border-t hover:bg-gray-50 transition cursor-pointer"
             >
-              <td className="px-4 py-3">{i + 1}</td>
               <td className="px-4 py-3">{c.name}</td>
               <td className="px-4 py-3">{c.phoneNumber}</td>
               <td className="px-4 py-3">

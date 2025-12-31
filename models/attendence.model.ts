@@ -1,0 +1,49 @@
+import mongoose from "mongoose";
+
+const { Schema } = mongoose;
+
+const AttendanceSchema = new Schema(
+    {
+        title: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+
+        date: {
+            type: Date,
+            required: true,
+            unique: true,
+            index: true,
+        },
+
+        time: {
+            type: String,
+            required: true,
+        },
+
+        description: {
+            type: String,
+            trim: true,
+            default: "",
+        },
+
+        users: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "User",
+                required: true,
+            },
+        ],
+    },
+    {
+        timestamps: true,
+        versionKey: false,
+    }
+);
+
+const Attendance =
+    mongoose.models.Attendance ||
+    mongoose.model("Attendance", AttendanceSchema);
+
+export default Attendance;
