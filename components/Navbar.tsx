@@ -1,12 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/router";
-import { logout } from "@/components/slices/authSlice";
+import { logout, userTypeChange } from "@/components/slices/authSlice";
+import { PersistData } from "./my-list-com/types";
+import dbConnectCongrigation, { dbDisconnectCongrigation } from "@/lib/dbConnect-congrigation";
+import dbConnect, { dbDisconnect } from "@/lib/dbConnect";
+import axios from "axios";
 
 const Header: React.FC = () => {
     const [show, setShow] = useState<boolean>(false);
+    const [selectedType, setSelectedType] = useState<string>("youth");
+    const auth = useSelector((s: PersistData) => s.auth);
 
     // --- Redux Auth State (REAL data saved by redux-persist)
     const authState = useSelector((state: any) => state.auth);
@@ -28,6 +34,20 @@ const Header: React.FC = () => {
 
     const userRole = authState?.user?.role;
     const isAdmin = userRole && ["admin", "superAdmin"].includes(userRole);
+
+    useEffect(() => {
+        setSelectedType(authState?.user?.userType || "youth");
+    }, [])
+    // Debouncing effect for selectedType change
+    useEffect(() => {
+        const timer = setTimeout(async () => {
+            dispatch(userTypeChange({ usertype: selectedType }));
+            setShow(false);
+            await axios.post("/api/switch-db", { userType: selectedType });
+        }, 2500);
+
+        return () => clearTimeout(timer);
+    }, [selectedType]);
 
     return (
         <div className="font-inter">
@@ -79,9 +99,24 @@ const Header: React.FC = () => {
                         </svg>
                     </button>
                 </div>
-
+                {/* DROPDOWN - Youth/Congregation */}
+                {!authState?.isLoggedIn &&
+                    <div className="mb-5 px-4 py-3 border-t border-gray-200 bg-gray-50">
+                        <label className="text-xs text-gray-600 font-medium mb-1 block">Select Type</label>
+                        <select
+                            value={selectedType}
+                            onChange={(e) => setSelectedType(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                        >
+                            <option value="youth">Youth</option>
+                            <option value="congregation">Congregation</option>
+                        </select>
+                    </div>
+                }
                 {/* NAV LINKS */}
                 <nav className="flex flex-col p-4 space-y-2 text-gray-700 grow">
+
+
                     <button
                         onClick={() => navigateTo("/")}
                         className="text-left py-2 px-3 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 font-medium"
@@ -95,6 +130,31 @@ const Header: React.FC = () => {
                             className="text-left py-2 px-3 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 font-medium"
                         >
                             My List
+                        </button>
+                    )}
+
+                    {authState?.isLoggedIn && (
+                        <button
+                            onClick={() => navigateTo("/get-all-customer")}
+                            className="text-left py-2 px-3 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 font-medium"
+                        >
+                            Others List
+                        </button>
+                    )}
+                    {((isAdmin && userRole == "superAdmin") && authState?.isLoggedIn) && (
+                        <button
+                            onClick={() => navigateTo("/users-list")}
+                            className="text-left py-2 px-3 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 font-medium"
+                        >
+                            User List
+                        </button>
+                    )}
+                    {authState?.isLoggedIn && (
+                        <button
+                            onClick={() => navigateTo("/attendence")}
+                            className="text-left py-2 px-3 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 font-medium"
+                        >
+                            Attendence  
                         </button>
                     )}
 

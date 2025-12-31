@@ -2,6 +2,7 @@ import axios from "axios";
 import { useState, ChangeEvent, FormEvent } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import { Eye, EyeOff } from "lucide-react";
+import { useSelector } from "react-redux";
 
 axios.defaults.withCredentials = true;
 
@@ -17,12 +18,13 @@ export default function SignupPage() {
         name: "",
         phoneNumber: "",
         password: "",
-        userType: "", // must be selected
+        userType: "",
     });
 
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-
+    const authState = useSelector((state: any) => state.auth);
+    console.log(authState)
     const handleChange = (
         e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) => {
@@ -36,8 +38,8 @@ export default function SignupPage() {
         e.preventDefault();
         setLoading(true);
 
-        const { name, phoneNumber, password, userType } = formData;
-
+        const { name, phoneNumber, password } = formData;
+        const userType = "youth"; // Set default userType for signup
         if (!name || !phoneNumber || !password || !userType) {
             setLoading(false);
             toast.error("Please fill all fields including user type!");
@@ -76,42 +78,6 @@ export default function SignupPage() {
                 </h1>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-
-                    {/* USER TYPE RADIO BUTTONS */}
-                    <div>
-                        <label className="block text-gray-700 font-medium mb-2">
-                            User Type
-                        </label>
-
-                        <div className="flex items-center gap-6">
-
-                            {/* Youth */}
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="userType"
-                                    value="youth"
-                                    checked={formData.userType === "youth"}
-                                    onChange={handleChange}
-                                    className="w-5 h-5 text-blue-600 focus:ring-blue-500"
-                                />
-                                <span className="text-gray-700">Youth</span>
-                            </label>
-
-                            {/* Congregation */}
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="userType"
-                                    value="congregation"
-                                    checked={formData.userType === "congregation"}
-                                    onChange={handleChange}
-                                    className="w-5 h-5 text-blue-600 focus:ring-blue-500"
-                                />
-                                <span className="text-gray-700">Congregation</span>
-                            </label>
-                        </div>
-                    </div>
 
                     {/* Full Name */}
                     <div>

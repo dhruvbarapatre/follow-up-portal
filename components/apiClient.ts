@@ -20,6 +20,7 @@ const API = {
   assignCustomer: (data: any) => api.post("/customer/assign-customer-to-user", data),
   editCustomer: (data: any) => api.put("/customer/edit-customer", data),
   addCustomer: (data: any) => api.post("/customer/add-customer", data),
+  getAllCustomers: (userType: string) => api.post("/customer/get-all-customer", { userType }),
 
   // ADMIN
   getAdmins: () => api.get("/admins/get-admins"),
