@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import dbConnect from "@/lib/dbConnect";
-import AdminModel from "@/models/admin.model";
+import userModel from "@/models/user.model";
 
 export default async function handler(
     req: NextApiRequest,
@@ -15,8 +15,8 @@ export default async function handler(
         // connect to MongoDB
         await dbConnect();
 
-        // fetch all admins
-        const data = await AdminModel.find({});
+        // fetch only users with role "superAdmin"
+        const data = await userModel.find({ role: "superAdmin" }).select("name phoneNumber");
 
         return res.status(200).json({ data });
     } catch (error: any) {

@@ -1,29 +1,29 @@
 import axios from "axios";
 import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { toast, ToastContainer } from "react-toastify";
-import { Phone, X, Users, Eye, EyeOff } from "lucide-react";
+import { Phone, X, Users, Eye, EyeOff, Lock, UserCheck } from "lucide-react";
 import { useRouter } from "next/router";
 import { useSelector } from "react-redux";
 import { PersistData } from "@/components/my-list-com/types";
+import "react-toastify/dist/ReactToastify.css";
 
 axios.defaults.withCredentials = true;
 
 interface Admin {
   name: string;
-  phone: string;
+  phone?: string;
+  phoneNumber?: string;
 }
 
 interface FormData {
   phoneNumber: string;
   password: string;
-  userType: string; // <-- Added
 }
 
 export default function LoginPage() {
   const [formData, setFormData] = useState<FormData>({
     phoneNumber: "",
     password: "",
-    userType: "", // <-- Added
   });
 
   const [loading, setLoading] = useState(false);
@@ -63,10 +63,9 @@ export default function LoginPage() {
     e.preventDefault();
 
     const { phoneNumber, password } = formData;
-    
-    const userType = auth.user.userType; 
-    if (!phoneNumber || !password || !userType) {
-      toast.error("Please fill all fields including user type!");
+
+    if (!phoneNumber || !password) {
+      toast.error("Please fill all fields!");
       return;
     }
 
@@ -76,7 +75,6 @@ export default function LoginPage() {
       const res = await axios.post("/api/user/login", {
         phoneNumber,
         password,
-        userType,
       });
 
       localStorage.setItem("fyp_token", res.data.token);
@@ -91,137 +89,153 @@ export default function LoginPage() {
   };
 
   return (
-    <>
-      <div className="flex justify-center items-center w-full py-10">
-        <div className="w-full max-w-md bg-white shadow-xl rounded-xl p-6">
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold">Welcome Back</h1>
-            <p className="text-gray-500">Login to your account</p>
+    <div className="flex justify-center items-center w-full min-h-[calc(100vh-100px)] py-10 px-4 bg-zinc-950">
+      <div className="w-full max-w-sm bg-zinc-900/40 backdrop-blur-md border border-zinc-800/80 shadow-2xl rounded-3xl p-6 sm:p-8 relative overflow-hidden animate-slideUp">
+        {/* Decorative background glow */}
+        <div className="absolute -top-24 -left-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-violet-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="text-center mb-8 relative z-10">
+          <div className="w-12 h-12 bg-indigo-950/40 border border-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-400 shadow-inner">
+            <UserCheck size={22} />
           </div>
+          <h1 className="text-xl font-bold font-display text-zinc-100 tracking-tight">Welcome Back</h1>
+          <p className="text-xs text-zinc-450 mt-1">Sign in to manage your follow-ups</p>
+        </div>
 
-
+        <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
           {/* PHONE NUMBER */}
-          <div className="mb-4">
-            <label className="block mb-1 font-medium" htmlFor="phoneNumber">
+          <div>
+            <label className="block mb-1.5 text-xs font-semibold text-zinc-400 uppercase tracking-wider" htmlFor="phoneNumber">
               Phone Number
             </label>
-            <input
-              type="tel"
-              id="phoneNumber"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              className="w-full border rounded-lg px-4 py-3 text-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              placeholder="123 456 7890"
-            />
+            <div className="relative">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500">
+                <Phone size={16} />
+              </span>
+              <input
+                type="tel"
+                id="phoneNumber"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                className="w-full premium-input pr-4"
+                style={{ paddingLeft: "38px" }}
+                placeholder="Enter phone number"
+                required
+              />
+            </div>
           </div>
 
           {/* PASSWORD */}
-          <div className="mb-5">
-            <label className="block mb-1 font-medium" htmlFor="password">
+          <div>
+            <label className="block mb-1.5 text-xs font-semibold text-zinc-400 uppercase tracking-wider" htmlFor="password">
               Password
             </label>
             <div className="relative">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500">
+                <Lock size={16} />
+              </span>
               <input
                 type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full border rounded-lg px-4 py-3 text-lg pr-12 focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full premium-input pr-11"
+                style={{ paddingLeft: "38px" }}
                 placeholder="••••••••"
+                required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors p-0.5"
               >
-                {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
           {/* LOGIN BUTTON */}
           <button
-            onClick={handleSubmit}
+            type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold py-3 rounded-lg transition disabled:bg-blue-400"
+            className="w-full py-3.5 bg-gradient-to-r from-indigo-650 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-950/50 disabled:opacity-50 transition active:scale-95 duration-200 mt-6"
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Signing in..." : "Login"}
           </button>
+        </form>
 
-          {/* Register Info */}
-          <p className="text-center text-gray-500 mt-4">
-            Don't have an account?
-            <br />
-            Contact{" "}
-            <span
-              className="text-blue-600 font-medium underline cursor-pointer"
-              onClick={() => setShowPopup(true)}
-            >
-              Admin
-            </span>{" "}
-            to Create.
-          </p>
-        </div>
+        {/* Register Info */}
+        <p className="text-center text-xs text-zinc-450 mt-6 leading-relaxed relative z-10">
+          Don't have an account?<br />
+          Contact an{" "}
+          <span
+            className="text-indigo-400 font-semibold underline cursor-pointer hover:text-indigo-300 transition"
+            onClick={() => setShowPopup(true)}
+          >
+            Admin
+          </span>{" "}
+          to register.
+        </p>
       </div>
 
       {/* POPUP MODAL */}
       {showPopup && (
         <div
-          className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 backdrop-blur-sm z-50 p-4"
+          className="fixed inset-0 flex justify-center items-center bg-zinc-950/60 backdrop-blur-sm z-50 p-4"
           onClick={() => setShowPopup(false)}
         >
           <div
-            className="bg-white rounded-xl w-full max-w-md shadow-2xl"
+            className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden animate-slideUp"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-blue-600 p-5 text-white relative">
+            <div className="bg-gradient-to-r from-indigo-900 to-indigo-950 p-6 text-white relative border-b border-zinc-800/80">
               <button
                 onClick={() => setShowPopup(false)}
-                className="absolute right-4 top-4 bg-white/20 p-2 rounded-full"
+                className="absolute right-4 top-4 bg-white/10 hover:bg-white/20 p-1.5 rounded-xl transition text-white"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
 
               <div className="text-center">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Users size={32} />
+                <div className="w-12 h-12 bg-white/10 border border-white/15 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <Users size={24} />
                 </div>
-                <h3 className="text-xl font-bold">Contact Admin</h3>
-                <p className="text-white/80 text-sm">
-                  Reach out to create your account
-                </p>
+                <h3 className="text-lg font-bold font-display text-zinc-100">Contact Admin</h3>
+                <p className="text-zinc-350 text-xs mt-0.5">Reach out to create your volunteer account</p>
               </div>
             </div>
-
-            <div className="p-5">
+            
+            <div className="p-5 max-h-[300px] overflow-y-auto scrollable-content space-y-2.5">
               {adminLoading ? (
-                <div className="text-center py-4">
-                  <p>Loading admin contacts...</p>
+                <div className="text-center py-6 text-xs text-zinc-450">
+                  <div className="animate-spin h-5 w-5 border-2 border-indigo-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                  Loading admin contacts...
                 </div>
               ) : admins.length > 0 ? (
-                admins.map((admin, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-gray-100 border rounded-lg p-4 mb-3 flex justify-between items-center hover:bg-gray-200 transition"
-                  >
-                    <div>
-                      <p className="font-semibold">{admin.name}</p>
-                      <p className="text-gray-600 flex items-center gap-1 text-sm">
-                        <Phone size={14} /> {admin.phone}
-                      </p>
+                admins.map((admin, idx) => {
+                  const phoneNum = admin.phone || admin.phoneNumber || "";
+                  return (
+                    <div key={idx} className="border border-zinc-800 bg-zinc-850/30 rounded-2xl p-3 flex justify-between items-center hover:bg-zinc-850/50 transition-colors">
+                      <div>
+                        <p className="font-semibold text-zinc-200 text-sm">{admin.name}</p>
+                        <p className="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">
+                          <Phone size={11} className="text-zinc-650" /> {phoneNum}
+                        </p>
+                      </div>
+                      <a
+                        href={`tel:${phoneNum}`}
+                        className="px-3.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/80 rounded-xl flex items-center gap-1.5 text-xs font-semibold shadow-sm transition active:scale-95 duration-200"
+                      >
+                        <Phone size={12} /> Call
+                      </a>
                     </div>
-                    <a
-                      href={`tel:${admin.phone}`}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-1 text-sm"
-                    >
-                      <Phone size={16} /> Call
-                    </a>
-                  </div>
-                ))
+                  );
+                })
               ) : (
-                <p className="text-center text-gray-500">No admin contacts found</p>
+                <p className="text-center text-xs text-zinc-500 py-6">No admin contacts found</p>
               )}
             </div>
           </div>
@@ -229,6 +243,6 @@ export default function LoginPage() {
       )}
 
       <ToastContainer position="bottom-left" autoClose={3000} />
-    </>
+    </div>
   );
 }

@@ -2,7 +2,6 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import jwt from "jsonwebtoken";
 import dbConnect from "@/lib/dbConnect";
 import userModel from "@/models/user.model";
-import dbConnectCongrigation from "@/lib/dbConnect-congrigation";
 
 interface AuthRequest extends NextApiRequest {
     userData?: any;
@@ -13,18 +12,13 @@ export default async function handler(req: AuthRequest, res: NextApiResponse) {
         return res.status(405).json({ message: "Method Not Allowed" });
     }
     
-    const { token, userType } = req.body;
-    if (!token || !userType) {
+    const { token } = req.body;
+    if (!token) {
         return res.status(400).json({ message: "Token is required" });
     }
 
-    if (userType === "youth") {
-        await dbConnect();
-    } else if (userType === "congregation") {
-        await dbConnectCongrigation();
-    } else {
-        return res.status(400).json({ message: "Invalid user type" });
-    }
+    await dbConnect();
+
     try {
         const decoded = jwt.verify(token, process.env.SECRET_KEY!);
         if (typeof decoded === "object") {

@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
 import dbConnect from "@/lib/dbConnect";
-import dbConnectCongrigation from "@/lib/dbConnect-congrigation";
 import UserModel from "@/models/user.model";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -11,21 +10,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(405).json({ message: "Method Not Allowed" });
     }
 
-    const { phoneNumber, password, userType } = req.body;
+    const { phoneNumber, password } = req.body;
 
-    if (!phoneNumber || !password || !userType) {
-        return res.status(400).json({ message: "Fill all fields including user type" });
+    if (!phoneNumber || !password) {
+        return res.status(400).json({ message: "Fill all fields" });
     }
 
     try {
-        // select correct database
-        if (userType === "youth") {
-            await dbConnect();
-        } else if (userType === "congregation") {
-            await dbConnectCongrigation();
-        } else {
-            return res.status(400).json({ message: "Invalid user type" });
-        }
+        await dbConnect();
 
         // find user
         const user = await UserModel.findOne({ phoneNumber });
@@ -47,7 +39,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             phoneNumber: user.phoneNumber,
             name: user.name,
             role: user.role,
-            userType,
         };
 
         const token = jwt.sign(payload, process.env.SECRET_KEY!, { expiresIn: "7d" });

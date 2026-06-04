@@ -5,6 +5,7 @@ export interface ICustomer extends Document {
     name: string;
     phoneNumber: number;
     adderId: string;
+    isMarried: boolean;
     chanting?: number;
     address?: string;
     age?: number;
@@ -31,6 +32,10 @@ export interface ICustomer extends Document {
     }[];
 
     whoCanFollowUp?: string[];
+    callingStatus?: string;
+    callingBy?: string;
+    callingById?: string;
+    lastCallResponse?: string;
 }
 
 // 2️⃣ SCHEMA
@@ -104,6 +109,27 @@ const CustomerSchema: Schema<ICustomer> = new Schema(
         whoCanFollowUp: {
             type: [String],
             default: [],
+        },
+        isMarried: {
+            type: Boolean,
+            required: true,
+            default: false,
+        },
+        callingStatus: {
+            type: String,
+            default: "idle",
+        },
+        callingBy: {
+            type: String,
+            default: "",
+        },
+        callingById: {
+            type: String,
+            default: "",
+        },
+        lastCallResponse: {
+            type: String,
+            default: "pending",
         },
     },
     {

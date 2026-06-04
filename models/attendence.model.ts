@@ -35,6 +35,31 @@ const AttendanceSchema = new Schema(
                 required: true,
             },
         ],
+        invitedCustomers: [
+            {
+                customerId: {
+                    type: Schema.Types.ObjectId,
+                    ref: "Customer",
+                    required: true,
+                },
+                status: {
+                    type: String,
+                    default: "invited",
+                },
+                response: {
+                    type: String,
+                    default: "pending",
+                },
+                callingBy: {
+                    type: String,
+                    default: "",
+                },
+                attended: {
+                    type: Boolean,
+                    default: false,
+                },
+            },
+        ],
     },
     {
         timestamps: true,

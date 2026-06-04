@@ -1,12 +1,13 @@
 "use client";
-import { useEffect, useState } from "react";
-import { UserPlus } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import AssignModal from "../../components/my-list-com/AssignModal";
 import UserCard from "../../components/my-list-com/User-card";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { PersistData } from "../../components/my-list-com/types";
 import API from "@/components/apiClient";
+import { getSocket } from "@/lib/socket";
+import "react-toastify/dist/ReactToastify.css";
 
 const UserListPage = () => {
     const auth = useSelector((s: PersistData) => s.auth);
@@ -16,11 +17,12 @@ const UserListPage = () => {
     const [loadingUnreserved, setLoadingUnreserved] = useState(true);
     const [assignCustomer, setAssignCustomer] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
+    const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
 
     const loadUsers = async () => {
         setLoadingUsers(true);
         try {
-            const res = await API.getAllUsers(auth.token, auth.user.userType);
+            const res = await API.getAllUsers(auth.token);
             setUsers(res.data.data || []);
         } catch {
             toast.error("Failed to load users");
@@ -31,7 +33,7 @@ const UserListPage = () => {
     const loadUnreserved = async () => {
         setLoadingUnreserved(true);
         try {
-            const res = await API.getUnReserved(auth.token, auth.user.userType);
+            const res = await API.getUnReserved(auth.token);
             setUnreserved(res.data.data || []);
         } catch {
             toast.error("Failed to load unreserved list");
@@ -44,74 +46,44 @@ const UserListPage = () => {
             loadUsers();
             loadUnreserved();
         }
+
+        const socket = getSocket();
+        socket.connect();
+        socket.on("online-users-list", (list: string[]) => {
+            setOnlineUsers(list);
+        });
+
+        return () => {
+            socket.off("online-users-list");
+        };
     }, []);
 
     const Loader = () => (
-        <div className="flex justify-center py-8">
-            <div className="animate-spin h-8 w-8 border-4 border-blue-400 border-t-transparent rounded-full"></div>
+        <div className="flex justify-center py-12">
+            <div className="animate-spin h-6 w-6 border-2 border-indigo-500 border-t-transparent rounded-full"></div>
         </div>
     );
 
     return (
-        <div className="p-6 space-y-10">
-            {/* //unreserved customers section */}
-            {/* {(auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") && (
-                <div>
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold">Unreserved Customers</h2>
-                        <span className="px-3 py-1 bg-yellow-400 text-sm rounded-full">
-                            {unreserved.length} Customers
-                        </span>
-                    </div>
-
-                    {loadingUnreserved ? (
-                        <Loader />
-                    ) : (
-                        <div className="grid md:grid-cols-2 gap-4">
-                            {unreserved.length === 0 ? (
-                                <p className="text-center text-gray-500 py-4 col-span-full">
-                                    No unreserved customers.
-                                </p>
-                            ) : (
-                                unreserved.map((c: any) => (
-                                    <div
-                                        key={c._id}
-                                        className="p-4 bg-white shadow rounded-lg border-l-4 border-yellow-400 flex justify-between items-center"
-                                    >
-                                        <div>
-                                            <p className="font-semibold">{c.name}</p>
-                                            <p className="text-gray-500 text-sm">{c.phoneNumber}</p>
-                                        </div>
-                                        <button
-                                            onClick={() => setAssignCustomer(c)}
-                                            className="px-3 py-2 bg-yellow-500 text-white rounded-md flex items-center gap-1"
-                                        >
-                                            <UserPlus size={16} /> Assign
-                                        </button>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    )}
-                </div>
-            )} */}
-
+        <div className="p-5 sm:p-6 space-y-6 animate-fadeIn">
             {(auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") && (
-                <div>
-                    <div className="flex justify-between items-center mb-4">
-                        <h1 className="text-2xl font-bold">Users</h1>
-                        <span className="px-3 py-1 bg-blue-600 text-white text-sm rounded-full">
-                            {users.length} Users
-                        </span>
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-base font-bold text-neutral-800 dark:text-zinc-150 font-display uppercase tracking-tight">Follow Up Doers</h1>
+                            <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 rounded-full">
+                                {users.length} doers
+                            </span>
+                        </div>
                     </div>
 
                     {loadingUsers ? (
                         <Loader />
                     ) : (
-                        <div className="grid md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-3">
                             {users.length === 0 ? (
-                                <p className="text-center text-gray-500 py-4 col-span-full">
-                                    No users found.
+                                <p className="text-xs text-neutral-400 italic text-center py-6">
+                                    No users found in organization.
                                 </p>
                             ) : (
                                 users.map((u: any) => (
@@ -121,6 +93,7 @@ const UserListPage = () => {
                                         users={users}
                                         isOpen={true}
                                         onOpen={() => setSelectedUser(u)}
+                                        onlineUsers={onlineUsers}
                                     />
                                 ))
                             )}
@@ -137,6 +110,8 @@ const UserListPage = () => {
                     reload={loadUnreserved}
                 />
             )}
+            
+            <ToastContainer position="bottom-left" autoClose={3000} />
         </div>
     );
 };

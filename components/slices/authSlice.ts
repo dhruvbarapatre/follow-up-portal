@@ -26,10 +26,6 @@ interface LoginPayload {
   userType?: string;
 }
 
-interface UserTypePayload {
-  usertype?: string;
-}
-
 const initialStateForUser: LoginPayload = {
   id: '',
   name: '',
@@ -57,10 +53,8 @@ const authSlice = createSlice({
       state.user = { id, name, phone, role, userType };
       state.token = token; // Store token separately
       state.isLoggedIn = true;
-    },
-    userTypeChange(state, action: PayloadAction<UserTypePayload>) {
-      if (state.user) {
-        state.user.userType = action.payload.usertype;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("fyp_username", name || "");
       }
     },
     // logout uses PayloadAction without any specific payload (void)
@@ -69,9 +63,12 @@ const authSlice = createSlice({
       state.user = initialStateForUser;
       state.token = null;
       state.isLoggedIn = false;
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("fyp_username");
+      }
     },
   },
 });
 
-export const { loginSuccess, logout, userTypeChange } = authSlice.actions;
+export const { loginSuccess, logout } = authSlice.actions;
 export default authSlice.reducer;

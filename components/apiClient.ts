@@ -7,23 +7,29 @@ export const api = axios.create({
 });
 
 const API = {
-  getAllUsers: (token: string, userType: string) => api.post("/user/get-all-user", {
-    token, userType
+  getAllUsers: (token: string) => api.post("/user/get-all-user", {
+    token
   }),
-  getUserList: (followUpId: string, userType: string) => api.post("/user/get-user-list", { followUpId, userType }),
+  getUserList: (followUpId: string) => api.post("/user/get-user-list", { followUpId }),
   checkUser: () => api.get("/user/check-user"),
 
   // CUSTOMER
-  getUnReserved: (token: string, userType: string) => api.post("/customer/get-un-resrerved-customer", {
-    token, userType
+  getUnReserved: (token: string) => api.post("/customer/get-un-resrerved-customer", {
+    token
   }),
   assignCustomer: (data: any) => api.post("/customer/assign-customer-to-user", data),
   editCustomer: (data: any) => api.put("/customer/edit-customer", data),
   addCustomer: (data: any) => api.post("/customer/add-customer", data),
-  getAllCustomers: (userType: string) => api.post("/customer/get-all-customer", { userType }),
+  getAllCustomers: () => api.post("/customer/get-all-customer"),
 
   // ADMIN
   getAdmins: () => api.get("/admins/get-admins"),
+
+  // ATTENDANCE
+  getPrograms: () => api.get("/attendence/list"),
+  createProgram: (data: any) => api.post("/attendence/create", data),
+  updateProgram: (data: any) => api.put("/attendence/update", data),
+  deleteProgram: (id: string) => api.delete("/attendence/delete", { data: { id } }),
 };
 
 export default API;

@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import dbConnect from "@/lib/dbConnect";
 import CustomerModel from "@/models/customer.model";
-import dbConnectCongrigation from "@/lib/dbConnect-congrigation";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -10,19 +9,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
 
-    const { followUpId, userType } = req.body;
+    const { followUpId } = req.body;
 
-    if (!followUpId || !userType) {
+    if (!followUpId) {
       return res.status(400).json({ message: "followUpId is required" });
     }
 
-    if (userType === "youth") {
-      await dbConnect();
-    } else if (userType === "congregation") {
-      await dbConnectCongrigation();
-    } else {
-      return res.status(400).json({ message: "Invalid user type" });
-    }
+    await dbConnect();
 
     // Same logic you wrote
     const customers = await CustomerModel.find({

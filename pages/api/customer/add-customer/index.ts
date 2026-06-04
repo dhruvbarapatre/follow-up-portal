@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import dbConnect from "@/lib/dbConnect";
 import CustomerModel from "@/models/customer.model";
-import dbConnectCongrigation from "@/lib/dbConnect-congrigation";
 
 export default async function handler(
     req: NextApiRequest,
@@ -10,20 +9,19 @@ export default async function handler(
     if (req.method !== "POST") {
         return res.status(405).json({ message: "Method Not Allowed" });
     }
-    const { name, phoneNumber, adderId } = req.body;
-    const { userType, ...rest } = req.body;
-    if (!name || !phoneNumber || !adderId || !userType) {
+    const { name, phoneNumber, adderId, isMarried, ...rest } = req.body;
+    if (!name || !phoneNumber || !adderId) {
         return res.status(400).json({
             message: "name and phoneNumber must be provided",
         });
     }
-    if (userType === "youth") {
-        await dbConnect();
-    } else if (userType === "householder") {
-        await dbConnectCongrigation();
-    }
+    await dbConnect();
     try {
-        await CustomerModel.create(rest);
+        await CustomerModel.create({
+            ...rest,
+            name, phoneNumber, adderId,
+            isMarried: isMarried === true || isMarried === "true" || false,
+        });
         return res
             .status(200)
             .json({ message: "User Added Successfully" });

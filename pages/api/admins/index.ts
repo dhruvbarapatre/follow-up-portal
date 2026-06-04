@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import dbConnect from "@/lib/dbConnect";
 import CustomerModel from "@/models/customer.model";
-import dbConnectCongrigation from "@/lib/dbConnect-congrigation";
 
 interface AuthRequest extends NextApiRequest {
     userData?: any; // This comes from your auth middleware

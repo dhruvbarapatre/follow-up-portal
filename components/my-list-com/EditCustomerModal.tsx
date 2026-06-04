@@ -1,8 +1,12 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { X, Phone, MessageCircle, Users } from "lucide-react";
+import { X, Phone, MessageCircle, Users, Save, BookOpen, MapPin, Calendar } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
+import { useSelector } from "react-redux";
 import API from "@/components/apiClient";
+import { useCallingTracker } from "./useCallingTracker";
+import CallResponseModal from "./CallResponseModal";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function EditCustomerModal({
   customer,
@@ -26,6 +30,21 @@ export default function EditCustomerModal({
   });
 
   const unsavedActionRef = useRef<any>(null);
+
+  // Get current user from Redux to pass to the call tracker
+  const authState = useSelector((state: any) => state.auth);
+  const currentUser = authState?.user;
+
+  // Initialize the calling tracker hook
+  const {
+    activeCallCustomer,
+    initiateCall,
+    handleModalClose,
+  } = useCallingTracker(currentUser, () => {
+    // When a call feedback is saved, refresh lists and close modal
+    if (refreshCustomerList) refreshCustomerList();
+    onClose();
+  });
 
   // Compare objects
   const isEqual = (a: any, b: any) => JSON.stringify(a) === JSON.stringify(b);
@@ -70,28 +89,6 @@ export default function EditCustomerModal({
     });
   };
 
-  const addGoodConnection = () => {
-    if (!connInput.name.trim()) {
-      toast.error("Name required");
-      return;
-    }
-    setEdited({
-      ...edited,
-      goodConnectionWith: [...edited.goodConnectionWith, connInput],
-    });
-
-    setConnInput({ name: "", relation: "", phoneNumber: "" });
-  };
-
-  const removeGoodConnection = (index: number) => {
-    setEdited({
-      ...edited,
-      goodConnectionWith: edited.goodConnectionWith.filter(
-        (_: any, i: number) => i !== index
-      ),
-    });
-  };
-
   // --- CLOSE LOGIC ---
   const closeModal = () => {
     if (dirty) {
@@ -114,6 +111,7 @@ export default function EditCustomerModal({
       });
 
       setDirty(false);
+      if (refreshCustomerList) refreshCustomerList();
       onClose();
 
       toast.success("Updated!");
@@ -176,14 +174,14 @@ export default function EditCustomerModal({
   // Generate consistent color for user
   const getAvatarColor = (name: string) => {
     const colors = [
-      "bg-blue-500",
-      "bg-purple-500",
-      "bg-pink-500",
-      "bg-indigo-500",
-      "bg-teal-500",
-      "bg-orange-500",
-      "bg-cyan-500",
-      "bg-violet-500",
+      "bg-blue-500 dark:bg-blue-600",
+      "bg-purple-500 dark:bg-purple-600",
+      "bg-pink-500 dark:bg-pink-600",
+      "bg-indigo-500 dark:bg-indigo-600",
+      "bg-teal-500 dark:bg-teal-600",
+      "bg-orange-500 dark:bg-orange-600",
+      "bg-cyan-500 dark:bg-cyan-600",
+      "bg-violet-500 dark:bg-violet-600",
     ];
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
@@ -215,340 +213,311 @@ export default function EditCustomerModal({
     <>
       {/* BACKDROP */}
       <div
-        className="fixed inset-0 bg-black/50 flex items-center justify-center z-9999 p-4 min-h-screen"
+        className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/60 flex items-center justify-center z-40 p-4 backdrop-blur-sm"
         onClick={closeModal}
       >
         {/* MODAL */}
         <div
-          className="bg-white shadow-xl rounded-3xl w-full max-w-3xl max-h-[80vh] flex flex-col animate-slideUp my-auto mt-1"
+          className="bg-white dark:bg-zinc-900 shadow-xl rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden animate-slideUp border border-neutral-100 dark:border-zinc-800"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* FIXED HEADER */}
-          <div className="p-4 sm:p-6 border-b border-gray-200 shrink-0">
-            <div className="flex justify-between items-center mb-3">
-              <h2 className="text-xl sm:text-2xl font-bold">
-                {original.name || "Customer"}
-              </h2>
+          {/* HEADER */}
+          <div className="p-5 border-b border-neutral-100 dark:border-zinc-800/80 shrink-0">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 dark:text-zinc-550">
+                  Customer Profile
+                </span>
+                <h2 className="text-lg font-bold text-neutral-800 dark:text-zinc-100 font-display mt-0.5">
+                  {original.name || "Customer Details"}
+                </h2>
+              </div>
 
               <button
                 onClick={closeModal}
-                className="p-2 rounded-full hover:bg-gray-200 transition-colors shrink-0"
+                className="p-1.5 rounded-full hover:bg-neutral-50 dark:hover:bg-zinc-850 text-neutral-400 dark:text-zinc-550 hover:text-neutral-600 dark:hover:text-zinc-300 transition"
               >
-                <X size={22} />
+                <X size={18} />
               </button>
             </div>
 
-            {/* MODE SWITCH */}
-            <div className="flex justify-between items-center gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs sm:text-sm text-gray-500">Mode:</span>
-
-                <div className="flex gap-1.5">
-                  <button
-                    className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium ${editMode
-                      ? "bg-white border border-gray-300"
-                      : "bg-blue-600 text-white"
-                      }`}
-                    onClick={() => setEditMode(false)}
-                  >
-                    View
-                  </button>
-                  <button
-                    className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium ${editMode
-                      ? "bg-blue-600 text-white"
-                      : "bg-white border border-gray-300"
-                      }`}
-                    onClick={() => setEditMode(true)}
-                  >
-                    Edit
-                  </button>
-                </div>
+            {/* Apple style segmented control */}
+            <div className="flex justify-between items-center bg-neutral-50 dark:bg-zinc-950/40 p-1 rounded-xl">
+              <div className="flex gap-0.5 w-full">
+                <button
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    !editMode
+                      ? "bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                      : "text-neutral-500 dark:text-zinc-500 hover:text-neutral-800 dark:hover:text-zinc-300"
+                  }`}
+                  onClick={() => setEditMode(false)}
+                >
+                  View Details
+                </button>
+                <button
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    editMode
+                      ? "bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                      : "text-neutral-500 dark:text-zinc-500 hover:text-neutral-800 dark:hover:text-zinc-300"
+                  }`}
+                  onClick={() => setEditMode(true)}
+                >
+                  Edit Profile
+                </button>
               </div>
 
               {editMode && (
                 <button
                   onClick={handleSave}
                   disabled={!dirty}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded-lg font-medium ${dirty
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
+                  className={`ml-2 shrink-0 py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center gap-1 active:scale-95 ${
+                    dirty
+                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-100"
+                      : "bg-neutral-100 dark:bg-zinc-800 text-neutral-400 dark:text-zinc-600 cursor-not-allowed"
+                  }`}
                 >
-                  Save
+                  <Save size={12} /> Save
                 </button>
               )}
             </div>
           </div>
 
-          {/* SCROLLABLE CONTENT */}
-          <div className="overflow-y-auto flex-1 p-4 sm:p-6">
-            {/* FOLLOW-UP BY SECTION - MOBILE OPTIMIZED */}
-            <div className="bg-linear-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-3 mb-4">
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center w-100">
-                    <div className="flex justify-between w-full">
-                      <span className="font-semibold text-gray-700 text-sm flex items-center gap-1">
-                        <Users size={16} className="text-purple-600 shrink-0" />
-                        Follow-up By:
-                      </span>
-                      {/* User count badge */}
-                      {followUpUsers.length > 0 && (
-                        <div className="flex items-center gap-2">
-                          <div className="bg-purple-600 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
-                            {followUpUsers.length}{" "}
-                            {followUpUsers.length === 1 ? "User" : "Users"}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {editMode && (
-                    <span className="text-xs text-purple-600 font-medium">
-                      Tap for select
-                    </span>
-                  )}
-                </div>
-
-                {/* VIEW MODE */}
-                {!editMode && followUpUsers.length === 0 && (
-                  <div className="flex items-center gap-2 text-gray-500 py-2">
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                      <Users size={14} className="text-gray-400" />
-                    </div>
-                    <span className="text-xs italic">
-                      No users assigned
-                    </span>
-                  </div>
+          {/* CONTENT */}
+          <div className="overflow-y-auto flex-1 p-5 space-y-5 scrollable-content bg-neutral-50/30 dark:bg-zinc-950/20">
+            {/* WHO CAN FOLLOW UP - VOLUNTEERS */}
+            <div className="bg-white dark:bg-zinc-900/50 border border-neutral-100 dark:border-zinc-800/80 rounded-2xl p-4 shadow-sm">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-xs font-bold text-neutral-500 dark:text-zinc-450 uppercase tracking-wider flex items-center gap-1.5 font-sans">
+                  <Users size={14} className="text-indigo-500" />
+                  Follow-up Volunteer(s)
+                </span>
+                {followUpUsers.length > 0 && (
+                  <span className="text-[10px] bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50 px-2 py-0.5 rounded-full font-bold">
+                    {followUpUsers.length} Assigned
+                  </span>
                 )}
+              </div>
 
-                {!editMode && followUpUsers.length > 0 && (
-                  <div className="flex flex-wrap gap-2 max-h-[150px] overflow-y-auto">
-                    {followUpUsers.map((user: any, index: number) => (
+              {/* View Assigned Users */}
+              {!editMode ? (
+                followUpUsers.length === 0 ? (
+                  <p className="text-xs text-neutral-400 dark:text-zinc-550 italic py-1">No volunteers assigned to this youth.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {followUpUsers.map((user: any, idx: number) => (
                       <div
-                        key={index}
-                        className="bg-white border border-purple-200 rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm w-fit"
+                        key={idx}
+                        className="bg-neutral-50 dark:bg-zinc-950/30 border border-neutral-100 dark:border-zinc-800/50 rounded-xl px-2.5 py-1.5 flex items-center gap-2"
                       >
-                        <div
-                          className={`w-8 h-8 rounded-full ${getAvatarColor(
-                            user.name
-                          )} flex items-center justify-center text-white font-semibold text-xs shadow-md shrink-0`}
-                        >
+                        <div className={`w-6 h-6 rounded-lg ${getAvatarColor(user.name)} flex items-center justify-center text-white font-bold text-[10px]`}>
                           {getInitials(user.name)}
                         </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium text-gray-800 text-xs whitespace-nowrap">
-                            {user.name}
-                          </span>
-                          {user.email && (
-                            <span className="text-[10px] text-gray-500 whitespace-nowrap">
-                              {user.email}
-                            </span>
-                          )}
-                        </div>
+                        <span className="text-xs font-semibold text-neutral-700 dark:text-zinc-300">{user.name}</span>
                       </div>
                     ))}
                   </div>
-                )}
-
-                {/* EDIT MODE - MOBILE OPTIMIZED */}
-                {editMode && (
-                  <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto">
-                    {users && users.length > 0 ? (
-                      users.map((user: any) => {
-                        const isAssigned = (edited.whoCanFollowUp || []).includes(
-                          user._id
-                        );
-                        return (
-                          <button
-                            key={user._id}
-                            onClick={() => toggleFollowUpUser(user._id)}
-                            className={`relative rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm transition-all duration-200 w-fit ${isAssigned
-                              ? "bg-white border-2 border-purple-500"
-                              : "bg-white border border-gray-300"
-                              }`}
-                          >
-                            <div
-                              className={`w-8 h-8 rounded-full ${getAvatarColor(
-                                user.name
-                              )} flex items-center justify-center text-white font-semibold text-xs shadow-md shrink-0`}
-                            >
-                              {getInitials(user.name)}
-                            </div>
-                            <div className="flex flex-col items-start">
-                              <span className="font-medium text-gray-800 text-xs whitespace-nowrap text-left">
-                                {user.name}
-                              </span>
-                              {user.email && (
-                                <span className="text-[10px] text-gray-500 whitespace-nowrap text-left">
-                                  {user.email}
-                                </span>
-                              )}
-                            </div>
-                            {isAssigned && (
-                              <div className="w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center shrink-0 ml-1">
-                                <svg
-                                  className="w-3 h-3 text-white"
-                                  fill="none"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="3"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path d="M5 13l4 4L19 7"></path>
-                                </svg>
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })
-                    ) : (
-                      <div className="text-gray-500 text-xs italic py-2">
-                        No users available
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* FORM FIELDS */}
-            <div className="flex flex-col gap-3">
-              {/* NAME */}
-              <div>
-                <label className="text-xs sm:text-sm text-gray-600 font-medium block mb-1">
-                  Name
-                </label>
-
-                {editMode ? (
-                  <input
-                    className="border rounded-lg px-3 py-2 w-full text-sm"
-                    value={edited.name}
-                    onChange={(e) => handleField("name", e.target.value)}
-                  />
-                ) : (
-                  <p className="text-sm text-gray-800">{original.name || "-"}</p>
-                )}
-              </div>
-
-              {/* PHONE */}
-              <div>
-                <label className="text-xs sm:text-sm text-gray-600 font-medium block mb-1">
-                  Phone
-                </label>
-
-                {editMode ? (
-                  <input
-                    className="border rounded-lg px-3 py-2 w-full text-sm"
-                    value={edited.phoneNumber}
-                    onChange={(e) => handleField("phoneNumber", e.target.value)}
-                  />
-                ) : (
-                  <p className="text-sm text-gray-800">{original.phoneNumber || "-"}</p>
-                )}
-              </div>
-
-              {/* AGE */}
-              <div>
-                <label className="text-xs sm:text-sm text-gray-600 font-medium block mb-1">
-                  Age
-                </label>
-
-                {editMode ? (
-                  <input
-                    type="number"
-                    className="border rounded-lg px-3 py-2 w-full text-sm"
-                    value={edited.age || ""}
-                    onChange={(e) => handleField("age", e.target.value)}
-                  />
-                ) : (
-                  <p className="text-sm text-gray-800">{original.age || "-"}</p>
-                )}
-              </div>
-
-              {/* CHANTING */}
-              <div>
-                <label className="text-xs sm:text-sm text-gray-600 font-medium block mb-1">
-                  Chanting
-                </label>
-
-                {editMode ? (
-                  <input
-                    type="number"
-                    className="border rounded-lg px-3 py-2 w-full text-sm"
-                    value={edited.chanting || ""}
-                    onChange={(e) => handleField("chanting", e.target.value)}
-                  />
-                ) : (
-                  <p className="text-sm text-gray-800">{original.chanting || "-"}</p>
-                )}
-              </div>
-
-              {/* OUT OF STATION PLACE */}
-              {original.outOfStation?.isOutOfStation && (
-                <div>
-                  <label className="text-xs sm:text-sm text-gray-600 font-medium block mb-1">
-                    Out of Station Place
-                  </label>
-
-                  {editMode ? (
-                    <input
-                      className="border rounded-lg px-3 py-2 w-full text-sm"
-                      value={edited.outOfStation.isOutOfStationPlace}
-                      onChange={(e) =>
-                        handleNested(
-                          "outOfStation",
-                          "isOutOfStationPlace",
-                          e.target.value
-                        )
-                      }
-                    />
+                )
+              ) : (
+                /* Edit Assigned Users Select grid */
+                <div className="flex flex-wrap gap-1.5 max-h-[140px] overflow-y-auto scrollable-content py-1">
+                  {users && users.length > 0 ? (
+                    users.map((user: any) => {
+                      const isAssigned = (edited.whoCanFollowUp || []).includes(user._id);
+                      return (
+                        <button
+                          key={user._id}
+                          onClick={() => toggleFollowUpUser(user._id)}
+                          className={`rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 border text-xs transition duration-200 ${
+                            isAssigned
+                              ? "bg-indigo-50/70 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-900/50 text-indigo-700 dark:text-indigo-400 font-semibold"
+                              : "bg-white dark:bg-zinc-900 border-neutral-200 dark:border-zinc-800 text-neutral-600 dark:text-zinc-400 hover:bg-neutral-50 dark:hover:bg-zinc-800"
+                          }`}
+                        >
+                          <div className={`w-5 h-5 rounded-md ${getAvatarColor(user.name)} flex items-center justify-center text-white font-bold text-[8px]`}>
+                            {getInitials(user.name)}
+                          </div>
+                          <span>{user.name}</span>
+                        </button>
+                      );
+                    })
                   ) : (
-                    <p className="text-sm text-gray-800">
-                      {original.outOfStation?.isOutOfStationPlace || "-"}
-                    </p>
+                    <span className="text-xs text-neutral-400 dark:text-zinc-550 italic">No volunteers loaded.</span>
                   )}
                 </div>
               )}
+            </div>
 
-              {/* ADDRESS */}
-              <div>
-                <label className="text-xs sm:text-sm text-gray-600 font-medium block mb-1">
-                  Address
-                </label>
+            {/* SADHANA & DETAILS SECTION */}
+            <div className="bg-white dark:bg-zinc-900/50 border border-neutral-100 dark:border-zinc-800/80 rounded-2xl p-4 shadow-sm space-y-4">
+              <span className="text-xs font-bold text-neutral-500 dark:text-zinc-450 uppercase tracking-wider block font-sans">
+                Profile Information
+              </span>
 
-                {editMode ? (
-                  <textarea
-                    className="border rounded-lg px-3 py-2 w-full text-sm min-h-[60px]"
-                    value={edited.address || ""}
-                    onChange={(e) => handleField("address", e.target.value)}
-                  />
-                ) : (
-                  <p className="text-sm text-gray-800">{original.address || "-"}</p>
+              <div className="grid grid-cols-2 gap-4">
+                {/* NAME */}
+                <div className="col-span-2">
+                  <label className="text-[10px] font-bold text-neutral-400 dark:text-zinc-500 uppercase tracking-wider block mb-1">Name</label>
+                  {editMode ? (
+                    <input
+                      className="w-full premium-input py-2 text-xs"
+                      value={edited.name}
+                      onChange={(e) => handleField("name", e.target.value)}
+                    />
+                  ) : (
+                    <p className="text-sm font-semibold text-neutral-800 dark:text-zinc-100">{original.name || "-"}</p>
+                  )}
+                </div>
+
+                {/* PHONE */}
+                <div>
+                  <label className="text-[10px] font-bold text-neutral-400 dark:text-zinc-500 uppercase tracking-wider block mb-1">Phone</label>
+                  {editMode ? (
+                    <input
+                      className="w-full premium-input py-2 text-xs"
+                      value={edited.phoneNumber}
+                      onChange={(e) => handleField("phoneNumber", e.target.value)}
+                    />
+                  ) : (
+                    <p className="text-sm font-semibold text-neutral-800 dark:text-zinc-100">{original.phoneNumber || "-"}</p>
+                  )}
+                </div>
+
+                {/* AGE */}
+                <div>
+                  <label className="text-[10px] font-bold text-neutral-400 dark:text-zinc-500 uppercase tracking-wider block mb-1">Age</label>
+                  {editMode ? (
+                    <input
+                      type="number"
+                      className="w-full premium-input py-2 text-xs"
+                      value={edited.age || ""}
+                      onChange={(e) => handleField("age", e.target.value)}
+                    />
+                  ) : (
+                    <p className="text-sm font-semibold text-neutral-800 dark:text-zinc-100">{original.age || "-"}</p>
+                  )}
+                </div>
+
+                {/* CHANTING */}
+                <div>
+                  <label className="text-[10px] font-bold text-neutral-400 dark:text-zinc-500 uppercase tracking-wider block mb-1 flex items-center gap-1">
+                    <BookOpen size={12} className="text-indigo-500" /> Chanting
+                  </label>
+                  {editMode ? (
+                    <input
+                      type="number"
+                      className="w-full premium-input py-2 text-xs"
+                      value={edited.chanting || ""}
+                      onChange={(e) => handleField("chanting", e.target.value)}
+                    />
+                  ) : (
+                    <p className="text-sm font-semibold text-neutral-800 dark:text-zinc-100">{original.chanting || "0"} Rounds</p>
+                  )}
+                </div>
+
+                {/* OUT OF STATION DETAILS */}
+                {original.outOfStation?.isOutOfStation && (
+                  <>
+                    <div>
+                      <label className="text-[10px] font-bold text-neutral-400 dark:text-zinc-500 uppercase tracking-wider block mb-1 flex items-center gap-1 font-sans">
+                        <MapPin size={12} className="text-amber-500" /> Station Place
+                      </label>
+                      {editMode ? (
+                        <input
+                          className="w-full premium-input py-2 text-xs"
+                          value={edited.outOfStation?.isOutOfStationPlace || ""}
+                          onChange={(e) =>
+                            handleNested(
+                              "outOfStation",
+                              "isOutOfStationPlace",
+                              e.target.value
+                            )
+                          }
+                        />
+                      ) : (
+                        <p className="text-sm font-semibold text-neutral-800 dark:text-zinc-100">
+                          {original.outOfStation?.isOutOfStationPlace || "-"}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-bold text-neutral-400 dark:text-zinc-500 uppercase tracking-wider block mb-1 flex items-center gap-1 font-sans">
+                        <Calendar size={12} className="text-amber-500" /> Expected Return
+                      </label>
+                      {editMode ? (
+                        <input
+                          type="date"
+                          className="w-full premium-input py-2 text-xs"
+                          value={edited.outOfStation?.tillDateOutOfStation || ""}
+                          onChange={(e) =>
+                            handleNested(
+                              "outOfStation",
+                              "tillDateOutOfStation",
+                              e.target.value
+                            )
+                          }
+                        />
+                      ) : (
+                        <p className="text-sm font-semibold text-neutral-800 dark:text-zinc-100">
+                          {original.outOfStation?.tillDateOutOfStation || "-"}
+                        </p>
+                      )}
+                    </div>
+                  </>
                 )}
+
+                {/* LAST CALL RESPONSE */}
+                <div className="col-span-2 border-t border-neutral-100 dark:border-zinc-800/80 pt-3 mt-1">
+                  <label className="text-[10px] font-bold text-neutral-400 dark:text-zinc-500 uppercase tracking-wider block mb-1">
+                    Last Call Response / Feedback
+                  </label>
+                  <div className="p-3 bg-neutral-50 dark:bg-zinc-950/40 border border-neutral-150 dark:border-zinc-850/30 rounded-xl">
+                    <p className="text-xs font-semibold text-neutral-700 dark:text-zinc-300 capitalize">
+                      {original.lastCallResponse && original.lastCallResponse !== "pending"
+                        ? original.lastCallResponse
+                        : "No feedback recorded yet"}
+                    </p>
+                    {original.outOfStation?.isOutOfStation && original.outOfStation?.lastTimeNotAttendReason && (
+                      <p className="text-[10px] text-neutral-500 dark:text-zinc-400 mt-1">
+                        Reason: {original.outOfStation.lastTimeNotAttendReason}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* ADDRESS */}
+                <div className="col-span-2">
+                  <label className="text-[10px] font-bold text-neutral-400 dark:text-zinc-500 uppercase tracking-wider block mb-1">Address</label>
+                  {editMode ? (
+                    <textarea
+                      className="w-full premium-input text-xs min-h-[60px]"
+                      value={edited.address || ""}
+                      onChange={(e) => handleField("address", e.target.value)}
+                    />
+                  ) : (
+                    <p className="text-sm text-neutral-600 dark:text-zinc-400 leading-relaxed">{original.address || "-"}</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           {/* FIXED FOOTER */}
           {!editMode && (
-            <div className="p-4 sm:p-6 border-t border-gray-200 shrink-0">
-              <div className="flex gap-2">
+            <div className="p-4 bg-neutral-50 dark:bg-zinc-950/40 border-t border-neutral-100 dark:border-zinc-800/80 shrink-0">
+              <div className="flex gap-3">
                 <button
-                  className="flex-1 px-3 py-2.5 bg-blue-500 text-white rounded-lg flex items-center justify-center gap-2 text-sm font-medium shadow-sm active:scale-95 transition-transform"
-                  onClick={() =>
-                    (window.location.href = `tel:${original.phoneNumber}`)
-                  }
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl flex items-center justify-center gap-2 text-xs font-semibold shadow-md shadow-indigo-100 transition active:scale-95 duration-200"
+                  onClick={() => initiateCall(original)}
                 >
-                  <Phone size={16} /> Call
+                  <Phone size={14} /> Call Customer
                 </button>
 
                 <button
-                  className="flex-1 px-3 py-2.5 bg-green-500 text-white rounded-lg flex items-center justify-center gap-2 text-sm font-medium shadow-sm active:scale-95 transition-transform"
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl flex items-center justify-center gap-2 text-xs font-semibold shadow-md shadow-emerald-100 transition active:scale-95 duration-200"
                   onClick={openWhatsapp}
                 >
-                  <MessageCircle size={16} /> WhatsApp
+                  <MessageCircle size={14} /> WhatsApp
                 </button>
               </div>
             </div>
@@ -556,35 +525,42 @@ export default function EditCustomerModal({
         </div>
       </div>
 
+      {/* CALL FEEDBACK POPUP OVERLAY */}
+      {activeCallCustomer && (
+        <CallResponseModal
+          customer={activeCallCustomer}
+          currentUser={currentUser}
+          onClose={handleModalClose}
+        />
+      )}
+
       {/* SAVE CONFIRMATION */}
       {showSaveConfirm && (
         <div
-          className="fixed inset-0 bg-black/20 flex items-center justify-center z-99999"
+          className="fixed inset-0 bg-neutral-950/30 dark:bg-neutral-950/60 flex items-center justify-center z-50 p-4"
           onClick={() => setShowSaveConfirm(false)}
         >
           <div
-            className="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm"
+            className="bg-white dark:bg-zinc-900 p-5 rounded-2xl shadow-xl w-full max-w-xs border border-neutral-100 dark:border-zinc-800 animate-slideUp"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="font-bold mb-2">Save changes?</h3>
-
-            <p className="text-gray-600 mb-4">
-              Are you sure you want to save?
+            <h3 className="font-bold text-neutral-800 dark:text-zinc-100 text-sm">Save changes?</h3>
+            <p className="text-xs text-neutral-400 dark:text-zinc-400 mt-1 leading-relaxed">
+              Are you sure you want to write these modifications to the database?
             </p>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-2 mt-5">
               <button
-                className="px-4 py-2 rounded-lg bg-gray-200"
+                className="px-3.5 py-1.5 border border-neutral-200 dark:border-zinc-800 hover:bg-neutral-50 dark:hover:bg-zinc-800 text-neutral-600 dark:text-zinc-400 rounded-lg text-xs font-semibold"
                 onClick={() => setShowSaveConfirm(false)}
               >
                 Cancel
               </button>
-
               <button
-                className="px-4 py-2 rounded-lg bg-green-600 text-white"
+                className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-sm active:scale-95"
                 onClick={performSave}
               >
-                Save
+                Confirm
               </button>
             </div>
           </div>
@@ -594,46 +570,43 @@ export default function EditCustomerModal({
       {/* UNSAVED CHANGES */}
       {showUnsavedModal && (
         <div
-          className="fixed inset-0 bg-black/20 flex items-center justify-center z-99999"
+          className="fixed inset-0 bg-neutral-950/30 dark:bg-neutral-950/60 flex items-center justify-center z-50 p-4"
           onClick={() => setShowUnsavedModal(false)}
         >
           <div
-            className="bg-white p-6 rounded-xl shadow-xl w-full max-w-sm"
+            className="bg-white dark:bg-zinc-900 p-5 rounded-2xl shadow-xl w-full max-w-xs border border-neutral-100 dark:border-zinc-800 animate-slideUp"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="font-bold mb-2">Unsaved Changes</h3>
-
-            <p className="text-gray-600 mb-4">
-              Save changes before closing?
+            <h3 className="font-bold text-neutral-800 dark:text-zinc-100 text-sm">Unsaved Changes</h3>
+            <p className="text-xs text-neutral-400 dark:text-zinc-400 mt-1 leading-relaxed">
+              You have modifications that are not stored yet. Save before closing?
             </p>
 
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col gap-2 mt-5">
               <button
-                className="px-4 py-2 rounded-lg bg-gray-200"
-                onClick={() => handleUnsavedChoice("cancel")}
-              >
-                Cancel
-              </button>
-
-              <button
-                className="px-4 py-2 rounded-lg bg-red-500 text-white"
-                onClick={() => handleUnsavedChoice("discard")}
-              >
-                Discard
-              </button>
-
-              <button
-                className="px-4 py-2 rounded-lg bg-green-600 text-white"
+                className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-sm"
                 onClick={() => handleUnsavedChoice("save")}
               >
-                Save
+                Save Changes
+              </button>
+              <button
+                className="w-full py-2 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-450 border border-rose-100 dark:border-rose-900/50 rounded-lg text-xs font-semibold"
+                onClick={() => handleUnsavedChoice("discard")}
+              >
+                Discard Modifications
+              </button>
+              <button
+                className="w-full py-2 border border-neutral-200 dark:border-zinc-800 hover:bg-neutral-50 dark:hover:bg-zinc-800 text-neutral-600 dark:text-zinc-450 rounded-lg text-xs font-semibold"
+                onClick={() => handleUnsavedChoice("cancel")}
+              >
+                Stay on Profile
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <ToastContainer />
+      <ToastContainer position="bottom-left" autoClose={3000} />
     </>
   );
 }
