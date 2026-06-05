@@ -274,8 +274,9 @@ export default function AttendanceManager() {
   const invitedPendingList = filteredInvites.filter((ic) => !ic.attended);
 
   return (
-    <div className="p-5 sm:p-6 space-y-6 animate-fadeIn pb-12">
-      {/* HEADER SECTION */}
+    <div className="p-5 sm:p-6 space-y-6 pb-12">
+      <div className="animate-fadeIn space-y-6">
+        {/* HEADER SECTION */}
       <div className="flex justify-between items-center pb-4 border-b border-neutral-100 dark:border-zinc-800/80">
         <div>
           <h1 className="text-lg font-bold text-neutral-800 dark:text-zinc-100 font-display uppercase tracking-tight">Attendance Check-in</h1>
@@ -452,11 +453,12 @@ export default function AttendanceManager() {
           </div>
         </div>
       )}
+      </div>
 
       {/* BATCH ADD ATTENDEE MODAL */}
       {showAddForm && latestEvent && (
         <div
-          className="fixed inset-0 flex items-center justify-center bg-neutral-950/40 dark:bg-neutral-950/60 backdrop-blur-sm z-50 p-4"
+          className="fixed inset-0 flex items-center justify-center bg-neutral-950/40 dark:bg-neutral-950/60 backdrop-blur-md z-50 p-4"
           onClick={() => {
             setQueuedAttendees([]);
             setShowAddForm(false);

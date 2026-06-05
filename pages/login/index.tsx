@@ -184,7 +184,7 @@ export default function LoginPage() {
       {/* POPUP MODAL */}
       {showPopup && (
         <div
-          className="fixed inset-0 flex justify-center items-center bg-zinc-950/60 backdrop-blur-sm z-50 p-4"
+          className="fixed inset-0 flex justify-center items-center bg-zinc-950/60 backdrop-blur-md z-50 p-4"
           onClick={() => setShowPopup(false)}
         >
           <div

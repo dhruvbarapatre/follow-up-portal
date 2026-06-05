@@ -27,7 +27,7 @@ export default function App({ Component, pageProps }: AppProps) {
             <p className="text-xs text-slate-400 mt-1">Mobile View Simulation</p>
           </div>
           
-          <div className="relative w-full max-w-[400px] h-[85vh] rounded-[48px] border-[10px] border-slate-800 bg-white shadow-2xl overflow-hidden flex flex-col">
+          <div className="relative w-full max-w-[400px] h-[85vh] rounded-[48px] border-[10px] border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden flex flex-col">
             {/* Camera notch */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-5 bg-slate-800 rounded-b-2xl z-40 flex items-center justify-center">
               <div className="w-10 h-1 bg-slate-700 rounded-full mb-1"></div>

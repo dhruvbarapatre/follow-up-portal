@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import API from "@/components/apiClient";
 import { useCallingTracker } from "./useCallingTracker";
 import CallResponseModal from "./CallResponseModal";
+import { getSocket } from "@/lib/socket";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function EditCustomerModal({
@@ -110,6 +111,28 @@ export default function EditCustomerModal({
         updateData: edited,
       });
 
+      // Emit notification for newly assigned users
+      const originalDoers = original?.whoCanFollowUp || [];
+      const editedDoers = edited?.whoCanFollowUp || [];
+      const newlyAssigned = editedDoers.filter((uid: string) => !originalDoers.includes(uid));
+
+      if (newlyAssigned.length > 0) {
+        try {
+          const socket = getSocket();
+          socket.connect();
+          socket.emit("new-notification", {
+            type: "new-assignment",
+            message: `Customer '${edited.name}' assigned to you`,
+            createdAt: new Date(),
+            customerName: edited.name,
+            assignedUserIds: newlyAssigned,
+            assignedBy: currentUser?.name || "Admin",
+          });
+        } catch (sockErr) {
+          console.error("Socket emit failed", sockErr);
+        }
+      }
+
       setDirty(false);
       if (refreshCustomerList) refreshCustomerList();
       onClose();
@@ -213,12 +236,12 @@ export default function EditCustomerModal({
     <>
       {/* BACKDROP */}
       <div
-        className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/60 flex items-center justify-center z-40 p-4 backdrop-blur-sm"
+        className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/60 flex items-center justify-center z-50 p-4 backdrop-blur-md"
         onClick={closeModal}
       >
         {/* MODAL */}
         <div
-          className="bg-white dark:bg-zinc-900 shadow-xl rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden animate-slideUp border border-neutral-100 dark:border-zinc-800"
+          className="bg-white dark:bg-zinc-900 shadow-xl rounded-2xl w-full max-w-lg max-h-[90%] sm:max-h-[85%] flex flex-col overflow-hidden animate-slideUp border border-neutral-100 dark:border-zinc-800"
           onClick={(e) => e.stopPropagation()}
         >
           {/* HEADER */}
@@ -353,9 +376,9 @@ export default function EditCustomerModal({
                 Profile Information
               </span>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* NAME */}
-                <div className="col-span-2">
+                <div className="col-span-1 sm:col-span-2">
                   <label className="text-[10px] font-bold text-neutral-400 dark:text-zinc-500 uppercase tracking-wider block mb-1">Name</label>
                   {editMode ? (
                     <input
@@ -414,6 +437,21 @@ export default function EditCustomerModal({
                   )}
                 </div>
 
+                {/* PROFESSION */}
+                <div>
+                  <label className="text-[10px] font-bold text-neutral-400 dark:text-zinc-500 uppercase tracking-wider block mb-1">Profession</label>
+                  {editMode ? (
+                    <input
+                      className="w-full premium-input py-2 text-xs"
+                      value={edited.profession || ""}
+                      onChange={(e) => handleField("profession", e.target.value)}
+                      placeholder="e.g. Student, Engineer"
+                    />
+                  ) : (
+                    <p className="text-sm font-semibold text-neutral-800 dark:text-zinc-100">{original.profession || "-"}</p>
+                  )}
+                </div>
+
                 {/* OUT OF STATION DETAILS */}
                 {original.outOfStation?.isOutOfStation && (
                   <>
@@ -466,8 +504,23 @@ export default function EditCustomerModal({
                   </>
                 )}
 
+                {/* NOTE FOR HIM */}
+                <div className="col-span-1 sm:col-span-2">
+                  <label className="text-[10px] font-bold text-neutral-400 dark:text-zinc-500 uppercase tracking-wider block mb-1">Note for Him / Remarks</label>
+                  {editMode ? (
+                    <textarea
+                      className="w-full premium-input text-xs min-h-[60px]"
+                      value={edited.note || ""}
+                      onChange={(e) => handleField("note", e.target.value)}
+                      placeholder="Add notes or remarks..."
+                    />
+                  ) : (
+                    <p className="text-sm text-neutral-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap">{original.note || "-"}</p>
+                  )}
+                </div>
+
                 {/* LAST CALL RESPONSE */}
-                <div className="col-span-2 border-t border-neutral-100 dark:border-zinc-800/80 pt-3 mt-1">
+                <div className="col-span-1 sm:col-span-2 border-t border-neutral-100 dark:border-zinc-800/80 pt-3 mt-1">
                   <label className="text-[10px] font-bold text-neutral-400 dark:text-zinc-500 uppercase tracking-wider block mb-1">
                     Last Call Response / Feedback
                   </label>
@@ -486,7 +539,7 @@ export default function EditCustomerModal({
                 </div>
 
                 {/* ADDRESS */}
-                <div className="col-span-2">
+                <div className="col-span-1 sm:col-span-2">
                   <label className="text-[10px] font-bold text-neutral-400 dark:text-zinc-500 uppercase tracking-wider block mb-1">Address</label>
                   {editMode ? (
                     <textarea

@@ -36,6 +36,8 @@ export interface ICustomer extends Document {
     callingBy?: string;
     callingById?: string;
     lastCallResponse?: string;
+    profession?: string;
+    note?: string;
 }
 
 // 2️⃣ SCHEMA
@@ -130,6 +132,14 @@ const CustomerSchema: Schema<ICustomer> = new Schema(
         lastCallResponse: {
             type: String,
             default: "pending",
+        },
+        profession: {
+            type: String,
+            default: "",
+        },
+        note: {
+            type: String,
+            default: "",
         },
     },
     {

@@ -105,117 +105,119 @@ const UserListPage = () => {
   const selectedUserName = users.find((u: any) => u._id === selectedUserId)?.name || currentUser?.name || "User";
 
   return (
-    <div className="p-5 sm:p-6 space-y-8 animate-fadeIn">
-      {/* ===================== CUSTOMER LIST ===================== */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-neutral-100 dark:border-zinc-800/80">
-          <div className="flex items-center gap-2">
-            <h2 className="text-base font-bold text-neutral-850 dark:text-zinc-100 font-display uppercase tracking-tight">
-              {selectedUserId === currentUser?.id ? "My Assigned Customers" : `Assigned Customers of ${selectedUserName}`}
-            </h2>
-            <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 rounded-full font-sans shrink-0">
-              {customerList.length} total
-            </span>
-          </div>
-
-          {/* User Selector for Admins */}
-          {(auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") && (
+    <div className="p-5 sm:p-6 space-y-8">
+      <div className="animate-fadeIn space-y-8">
+        {/* ===================== CUSTOMER LIST ===================== */}
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-neutral-100 dark:border-zinc-800/80">
             <div className="flex items-center gap-2">
-              <label className="text-xs text-neutral-450 dark:text-zinc-400 font-semibold font-sans whitespace-nowrap">View Doer List:</label>
-              <select
-                value={selectedUserId}
-                onChange={(e) => setSelectedUserId(e.target.value)}
-                className="premium-input py-1 px-3 text-xs bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-zinc-800 text-neutral-800 dark:text-zinc-100 rounded-xl"
-              >
-                <option value={currentUser?.id}>Me ({currentUser?.name})</option>
-                {users
-                  .filter((u: any) => u._id !== currentUser?.id)
-                  .map((u: any) => (
-                    <option key={u._id} value={u._id}>
-                      {u.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-          )}
-        </div>
-
-        {loadingCustomerList ? (
-          <Loader />
-        ) : customerList.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-12 border border-dashed border-neutral-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 text-center">
-            <Inbox className="w-10 h-10 text-neutral-300 dark:text-zinc-650 mb-3" />
-            <p className="text-xs font-semibold text-neutral-500 dark:text-zinc-300">This list is empty</p>
-            <p className="text-[10px] text-neutral-400 dark:text-zinc-500 mt-1 max-w-[200px] leading-relaxed">
-              No follow-up assignments have been recorded for this user.
-            </p>
-          </div>
-        ) : (
-          <CustomerTable
-            list={customerList}
-            liveCallingStates={liveCallingStates}
-            onEdit={(c: any) => setEditCustomer(c)}
-            hideResponses={true}
-            users={users}
-          />
-        )}
-      </div>
-
-      {/* ===================== UNRESERVED CUSTOMERS ===================== */}
-      {(auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") && (
-        <div className="space-y-4 border-t border-neutral-100 dark:border-zinc-800/80 pt-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-neutral-800 dark:text-zinc-100 font-display uppercase tracking-tight">Unreserved Customers</h2>
-              <span className="px-2 py-0.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/50 text-[10px] font-bold text-amber-600 dark:text-amber-400 rounded-full font-sans">
-                {unreserved.length} available
+              <h2 className="text-base font-bold text-neutral-850 dark:text-zinc-100 font-display uppercase tracking-tight">
+                {selectedUserId === currentUser?.id ? "My Assigned Customers" : `Assigned Customers of ${selectedUserName}`}
+              </h2>
+              <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 rounded-full font-sans shrink-0">
+                {customerList.length} total
               </span>
             </div>
+
+            {/* User Selector for Admins */}
+            {(auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") && (
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-neutral-450 dark:text-zinc-400 font-semibold font-sans whitespace-nowrap">View Doer List:</label>
+                <select
+                  value={selectedUserId}
+                  onChange={(e) => setSelectedUserId(e.target.value)}
+                  className="premium-input py-1 px-3 text-xs bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-zinc-800 text-neutral-800 dark:text-zinc-100 rounded-xl"
+                >
+                  <option value={currentUser?.id}>Me ({currentUser?.name})</option>
+                  {users
+                    .filter((u: any) => u._id !== currentUser?.id)
+                    .map((u: any) => (
+                      <option key={u._id} value={u._id}>
+                        {u.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
           </div>
 
-          {loadingUnreserved ? (
+          {loadingCustomerList ? (
             <Loader />
-          ) : unreserved.length === 0 ? (
-            <p className="text-xs text-neutral-400 dark:text-zinc-500 italic text-center py-6">
-              All youth have been allocated!
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 gap-3">
-              {unreserved.map((c: any) => {
-                const liveState = liveCallingStates[c._id];
-                const isCalling = liveState?.status === "calling" || c.callingStatus === "calling";
-                const caller = liveState?.callingBy || c.callingBy;
-
-                return (
-                  <div
-                    key={c._id}
-                    className="p-4 bg-white dark:bg-zinc-900 border border-neutral-100 dark:border-zinc-800/80 shadow-premium rounded-xl flex justify-between items-center group hover:border-neutral-200 dark:hover:border-zinc-700 transition duration-200"
-                  >
-                    <div>
-                      <p className="font-semibold text-neutral-800 dark:text-zinc-100 text-sm group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{c.name}</p>
-                      <p className="text-xs text-neutral-400 dark:text-zinc-500 mt-0.5 flex items-center gap-2 font-sans">
-                        <span>{c.phoneNumber}</span>
-                        {isCalling && (
-                          <span className="text-[9px] font-extrabold text-rose-500 dark:text-rose-400 animate-pulse uppercase tracking-wider">
-                            ({caller} calling)
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    
-                    <button
-                      onClick={() => setAssignCustomer(c)}
-                      className="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-900/50 rounded-xl text-xs font-semibold flex items-center gap-1 transition active:scale-95 duration-200"
-                    >
-                      <UserPlus size={12} /> Assign
-                    </button>
-                  </div>
-                );
-              })}
+          ) : customerList.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-12 border border-dashed border-neutral-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 text-center">
+              <Inbox className="w-10 h-10 text-neutral-300 dark:text-zinc-650 mb-3" />
+              <p className="text-xs font-semibold text-neutral-500 dark:text-zinc-300">This list is empty</p>
+              <p className="text-[10px] text-neutral-400 dark:text-zinc-500 mt-1 max-w-[200px] leading-relaxed">
+                No follow-up assignments have been recorded for this user.
+              </p>
             </div>
+          ) : (
+            <CustomerTable
+              list={customerList}
+              liveCallingStates={liveCallingStates}
+              onEdit={(c: any) => setEditCustomer(c)}
+              hideResponses={true}
+              users={users}
+            />
           )}
         </div>
-      )}
+
+        {/* ===================== UNRESERVED CUSTOMERS ===================== */}
+        {(auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") && (
+          <div className="space-y-4 border-t border-neutral-100 dark:border-zinc-800/80 pt-6">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold text-neutral-805 dark:text-zinc-100 font-display uppercase tracking-tight">Unreserved Customers</h2>
+                <span className="px-2 py-0.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/50 text-[10px] font-bold text-amber-600 dark:text-amber-400 rounded-full font-sans">
+                  {unreserved.length} available
+                </span>
+              </div>
+            </div>
+
+            {loadingUnreserved ? (
+              <Loader />
+            ) : unreserved.length === 0 ? (
+              <p className="text-xs text-neutral-450 dark:text-zinc-500 italic text-center py-6">
+                All youth have been allocated!
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {unreserved.map((c: any) => {
+                  const liveState = liveCallingStates[c._id];
+                  const isCalling = liveState?.status === "calling" || c.callingStatus === "calling";
+                  const caller = liveState?.callingBy || c.callingBy;
+
+                  return (
+                    <div
+                      key={c._id}
+                      className="p-4 bg-white dark:bg-zinc-900 border border-neutral-100 dark:border-zinc-800/80 shadow-premium rounded-xl flex justify-between items-center group hover:border-neutral-200 dark:hover:border-zinc-700 transition duration-200"
+                    >
+                      <div>
+                        <p className="font-semibold text-neutral-800 dark:text-zinc-100 text-sm group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{c.name}</p>
+                        <p className="text-xs text-neutral-400 dark:text-zinc-500 mt-0.5 flex items-center gap-2 font-sans">
+                          <span>{c.phoneNumber}</span>
+                          {isCalling && (
+                            <span className="text-[9px] font-extrabold text-rose-500 dark:text-rose-400 animate-pulse uppercase tracking-wider">
+                              ({caller} calling)
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      
+                      <button
+                        onClick={() => setAssignCustomer(c)}
+                        className="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-900/40 text-amber-700 dark:text-amber-400 border border-amber-100 dark:border-amber-900/50 rounded-xl text-xs font-semibold flex items-center gap-1 transition active:scale-95 duration-200"
+                      >
+                        <UserPlus size={12} /> Assign
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* ===================== MODALS ===================== */}
       {assignCustomer && (

@@ -1,6 +1,5 @@
 /* Custom scrollbars */
 .scrollable-content {
-  max-height: 60vh;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -14,12 +13,8 @@
 }
 
 .scrollable-content::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 99px;
-}
-
-.dark .scrollable-content::-webkit-scrollbar-thumb {
   background: #3f3f46;
+  border-radius: 99px;
 }
 
 .scrollable-content::-webkit-scrollbar-thumb:hover {

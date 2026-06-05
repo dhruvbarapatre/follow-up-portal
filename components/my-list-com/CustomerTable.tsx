@@ -172,7 +172,7 @@ export default function CustomerTable({ list, onEdit, liveCallingStates = {}, hi
       {popupCustomer && (
         <div
           onClick={() => setPopupCustomer(null)}
-          className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+          className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/60 flex items-center justify-center z-50 p-4 backdrop-blur-md"
         >
           <div
             onClick={(e) => e.stopPropagation()}

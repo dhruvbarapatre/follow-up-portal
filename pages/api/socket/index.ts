@@ -75,6 +75,10 @@ export default function SocketHandler(req: NextApiRequest, res: any) {
         socket.broadcast.emit("new-notification", data);
       });
 
+      socket.on("request-online-users", () => {
+        socket.emit("online-users-list", Array.from(onlineUsers.keys()));
+      });
+
       socket.on("disconnect", () => {
         console.log(`Client disconnected: ${socketName} (ID: ${socket.id})`);
         if (socketName && socketName !== "Anonymous" && onlineUsers.has(socketName)) {

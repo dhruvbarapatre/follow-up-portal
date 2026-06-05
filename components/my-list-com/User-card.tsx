@@ -11,7 +11,7 @@ function UserPopup({ isOpen, onClose, user, isOnline }: any) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/60 flex items-center justify-center z-50 p-4 backdrop-blur-md">
       <div className="bg-white dark:bg-zinc-900 border border-neutral-100 dark:border-zinc-800 rounded-2xl p-6 w-full max-w-sm shadow-xl relative animate-slideUp">
         <button
           onClick={onClose}

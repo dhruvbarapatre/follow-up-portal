@@ -17,7 +17,7 @@ const Home: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [form, setForm] = useState({ name: "", phone: "" });
+  const [form, setForm] = useState({ name: "", phone: "", profession: "", note: "" });
   const router = useRouter();
 
   // ------------------ Modal Controls ------------------
@@ -30,7 +30,7 @@ const Home: React.FC = () => {
       return;
     }
 
-    setForm({ name: "", phone: "" });
+    setForm({ name: "", phone: "", profession: "", note: "" });
     setIsModalOpen(true);
   };
 
@@ -42,7 +42,7 @@ const Home: React.FC = () => {
 
   // ------------------ Submit Handler ------------------
   const handleSubmit = async () => {
-    const { name, phone } = form;
+    const { name, phone, profession, note } = form;
 
     if (!name || !phone) return toast.error("Please fill all fields!");
 
@@ -54,6 +54,8 @@ const Home: React.FC = () => {
       phoneNumber: phone,
       userType: "youth",
       adderId: authState?.user?.id,
+      profession,
+      note,
     };
 
     try {
@@ -146,11 +148,11 @@ const Home: React.FC = () => {
       {/* ------------------- Add Youth Modal ------------------- */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 flex items-center justify-center bg-neutral-950/40 dark:bg-neutral-950/60 backdrop-blur-sm z-50 p-4"
+          className="fixed inset-0 flex items-center justify-center bg-neutral-950/40 dark:bg-neutral-950/60 backdrop-blur-md z-50 p-4"
           onClick={closeModal}
         >
           <div
-            className="bg-white dark:bg-zinc-900 border border-neutral-100 dark:border-zinc-800/80 w-full max-w-md p-6 rounded-2xl shadow-xl overflow-hidden animate-slideUp"
+            className="bg-white dark:bg-zinc-900 border border-neutral-100 dark:border-zinc-800/80 w-full max-w-md p-6 rounded-2xl shadow-xl overflow-y-auto max-h-[90%] animate-slideUp"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -180,7 +182,7 @@ const Home: React.FC = () => {
             </div>
 
             {/* Input: Phone */}
-            <div className="mb-6">
+            <div className="mb-4">
               <label className="block text-xs font-semibold text-neutral-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
                 Phone Number
               </label>
@@ -195,10 +197,39 @@ const Home: React.FC = () => {
               />
             </div>
 
+            {/* Input: Profession */}
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-neutral-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
+                Profession
+              </label>
+              <input
+                name="profession"
+                className="w-full premium-input"
+                value={form.profession}
+                onChange={handleInput}
+                placeholder="Enter profession (e.g. Student, Engineer)"
+              />
+            </div>
+
+            {/* Input: Note */}
+            <div className="mb-6">
+              <label className="block text-xs font-semibold text-neutral-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
+                Note for Him / Remarks
+              </label>
+              <textarea
+                name="note"
+                className="w-full premium-input min-h-[60px] text-xs"
+                value={form.note}
+                onChange={handleInput}
+                placeholder="Add notes or remarks..."
+                rows={2}
+              />
+            </div>
+
             {/* Modal Footer */}
             <div className="flex justify-end gap-2 border-t border-neutral-100 dark:border-zinc-800/80 pt-4 mt-6">
               <button
-                className="px-4 py-2 border border-neutral-200 dark:border-zinc-800 hover:bg-neutral-50 dark:hover:bg-zinc-800 rounded-lg text-xs font-semibold text-neutral-600 dark:text-zinc-400 transition"
+                className="px-4 py-2 border border-neutral-200 dark:border-zinc-800 hover:bg-neutral-50 dark:hover:bg-zinc-800 rounded-lg text-xs font-semibold text-neutral-600 dark:text-zinc-450 transition"
                 onClick={closeModal}
               >
                 Cancel

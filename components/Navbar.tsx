@@ -109,6 +109,13 @@ const Header: React.FC = () => {
     }
 
     const handleNewNotification = (data: any) => {
+      // Filter targeted assignment notifications
+      if (data.type === "new-assignment" && data.assignedUserIds) {
+        if (!data.assignedUserIds.includes(authState?.user?.id)) {
+          return; // Skip this notification since it's not assigned to us
+        }
+      }
+
       const newNotif: NotificationItem = {
         id: data.id || Math.random().toString(36).substring(7),
         type: data.type || "info",
@@ -543,7 +550,7 @@ const Header: React.FC = () => {
 
       {/* Guide Modal */}
       {showGuideModal && (
-        <div className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/70 flex items-center justify-center z-50 p-4 backdrop-blur-md">
           <div className="bg-white dark:bg-zinc-900 border border-neutral-100 dark:border-zinc-800 rounded-2xl p-6 w-full max-w-sm shadow-xl relative animate-slideUp">
             <button
               onClick={() => setShowGuideModal(false)}

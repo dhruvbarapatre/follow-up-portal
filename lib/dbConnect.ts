@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-// const MONGODB_URI = process.env.MONGO_URI as string;
 const MONGODB_URI = process.env.MONGO_URI as string;
 
 if (!MONGODB_URI) {
@@ -10,19 +9,30 @@ if (!MONGODB_URI) {
 let cached = (global as any).mongoose;
 
 if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null };
+  cached = (global as any).mongoose = {
+    conn: null,
+    promise: null,
+  };
 }
 
 export default async function dbConnect() {
   if (cached.conn) {
-    return cached.conn; // Use existing connection
+    console.log("MongoDB: Using cached connection");
+    return cached.conn;
   }
 
   if (!cached.promise) {
+    console.log("MongoDB: Creating new connection...");
     cached.promise = mongoose
       .connect(MONGODB_URI, {
+        family: 4,
+        serverSelectionTimeoutMS: 30000,
+        bufferCommands: false,
       })
-      .then((mongoose) => mongoose);
+      .then((mongoose) => {
+        console.log("MongoDB: Connection established");
+        return mongoose;
+      });
   }
 
   cached.conn = await cached.promise;
