@@ -57,6 +57,11 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("attendance-update", data);
   });
 
+  socket.on("event-update", (data) => {
+    console.log("event-update received:", data);
+    socket.broadcast.emit("event-update", data);
+  });
+
   socket.on("new-notification", (data) => {
     console.log("new-notification received:", data);
     socket.broadcast.emit("new-notification", data);

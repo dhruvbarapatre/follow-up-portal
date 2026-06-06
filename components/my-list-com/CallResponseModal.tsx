@@ -9,6 +9,7 @@ interface CallResponseModalProps {
   currentUser: any;
   programId?: string; // Optional program ID if called in the context of an event
   onClose: (updatedCustomer?: any) => void;
+  isEditMode?: boolean;
 }
 
 export default function CallResponseModal({
@@ -16,11 +17,14 @@ export default function CallResponseModal({
   currentUser,
   programId,
   onClose,
+  isEditMode = false,
 }: CallResponseModalProps) {
   const [loading, setLoading] = useState(false);
   const [showOutOfStationForm, setShowOutOfStationForm] = useState(false);
   const [place, setPlace] = useState("");
   const [tillDate, setTillDate] = useState("");
+  const [selectedResponse, setSelectedResponse] = useState<string | null>(null);
+  const [customResponse, setCustomResponse] = useState("");
 
   const responses = [
     { value: "comes to youth class", label: "Comes to youth class", color: "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-905/30" },
@@ -29,6 +33,7 @@ export default function CallResponseModal({
     { value: "excuse", label: "Excuse / Busy", color: "bg-slate-50 dark:bg-zinc-800/40 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-700/50 hover:bg-slate-100 dark:hover:bg-zinc-805/40" },
     { value: "no", label: "No (Not Coming)", color: "bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-905/30" },
     { value: "not picked up", label: "Not picked up / No ans", color: "bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/50 hover:bg-indigo-100 dark:hover:bg-indigo-905/30" },
+    { value: "custom", label: "Custom Response...", color: "bg-fuchsia-50 dark:bg-fuchsia-950/20 text-fuchsia-700 dark:text-fuchsia-400 border-fuchsia-200 dark:border-fuchsia-900/50 hover:bg-fuchsia-100 dark:hover:bg-fuchsia-905/30" },
   ];
 
   const handleOutOfStationSubmit = async () => {
@@ -106,15 +111,22 @@ export default function CallResponseModal({
     }
   };
 
-  const handleSubmit = async (val: string) => {
-    if (val === "out of station") {
+  const handleSubmit = async () => {
+    if (!selectedResponse) return;
+    
+    if (selectedResponse === "out of station") {
       setShowOutOfStationForm(true);
+      return;
+    }
+
+    if (selectedResponse === "custom" && !customResponse.trim()) {
+      toast.error("Please enter a custom response");
       return;
     }
 
     setLoading(true);
     try {
-      const responseVal = val;
+      const responseVal = selectedResponse === "custom" ? customResponse.trim() : selectedResponse;
       const updateData: any = {
         callingStatus: "idle",
         callingBy: "",
@@ -186,6 +198,11 @@ export default function CallResponseModal({
   };
 
   const handleCancel = async () => {
+    if (isEditMode) {
+      onClose();
+      return;
+    }
+
     // If they cancel without choosing, set callingStatus back to idle
     setLoading(true);
     try {
@@ -337,8 +354,8 @@ export default function CallResponseModal({
               <PhoneOff size={18} />
             </div>
             <div>
-              <h3 className="font-semibold text-neutral-800 dark:text-zinc-100">Call Response</h3>
-              <p className="text-xs text-neutral-500 dark:text-zinc-400">Record customer feedback</p>
+              <h3 className="font-semibold text-neutral-800 dark:text-zinc-100">{isEditMode ? "Edit Call Response" : "Call Response"}</h3>
+              <p className="text-xs text-neutral-500 dark:text-zinc-400">{isEditMode ? "Change customer feedback" : "Record customer feedback"}</p>
             </div>
           </div>
           <button
@@ -358,7 +375,7 @@ export default function CallResponseModal({
           </div>
           <div className="text-right">
             <span className="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 px-2 py-0.5 rounded-full border border-indigo-100 dark:border-indigo-900/50">
-              Active Call
+              {isEditMode ? "Edit Record" : "Active Call"}
             </span>
           </div>
         </div>
@@ -370,18 +387,39 @@ export default function CallResponseModal({
           </p>
 
           <div className="grid grid-cols-1 gap-2.5">
-            {responses.map((resp) => (
-              <button
-                key={resp.value}
-                onClick={() => handleSubmit(resp.value)}
-                disabled={loading}
-                className={`w-full py-3 px-4 rounded-xl text-left font-medium border text-sm transition-all active:scale-98 flex items-center justify-between ${resp.color}`}
-              >
-                <span>{resp.label}</span>
-                <Check size={16} className="opacity-0 group-hover:opacity-100" />
-              </button>
-            ))}
+            {responses.map((resp) => {
+              const isSelected = selectedResponse === resp.value;
+              return (
+                <button
+                  key={resp.value}
+                  onClick={() => setSelectedResponse(resp.value)}
+                  disabled={loading}
+                  className={`w-full py-3 px-4 rounded-xl text-left font-medium border text-sm transition-all active:scale-98 flex items-center justify-between ${
+                    isSelected 
+                      ? "ring-2 ring-indigo-500 dark:ring-indigo-400 border-transparent shadow-md " + resp.color 
+                      : "opacity-80 hover:opacity-100 border-neutral-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-neutral-700 dark:text-zinc-300 hover:bg-neutral-50 dark:hover:bg-zinc-800"
+                  }`}
+                >
+                  <span className={isSelected ? "" : "text-neutral-700 dark:text-zinc-300"}>{resp.label}</span>
+                  {isSelected && <Check size={16} className="text-indigo-600 dark:text-indigo-400" />}
+                </button>
+              );
+            })}
           </div>
+          
+          {/* Custom Input Box */}
+          {selectedResponse === "custom" && (
+            <div className="mt-3 animate-slideUp">
+              <input
+                type="text"
+                autoFocus
+                placeholder="Type custom response here..."
+                value={customResponse}
+                onChange={(e) => setCustomResponse(e.target.value)}
+                className="w-full premium-input text-xs py-2.5 bg-white dark:bg-zinc-900 border border-indigo-200 dark:border-indigo-800"
+              />
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -391,7 +429,14 @@ export default function CallResponseModal({
             disabled={loading}
             className="px-4 py-2 bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-zinc-800 rounded-lg text-xs font-medium text-neutral-600 dark:text-zinc-450 hover:bg-neutral-50 dark:hover:bg-zinc-800 transition active:scale-95"
           >
-            Cancel / Clear Call
+            {isEditMode ? "Cancel" : "Cancel / Clear Call"}
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !selectedResponse || (selectedResponse === "custom" && !customResponse.trim())}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:active:scale-100 text-white rounded-lg text-xs font-semibold shadow-md active:scale-95 transition flex items-center gap-2"
+          >
+            {loading ? "Saving..." : <><Check size={14}/> Save Response</>}
           </button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { Calendar, Clock, Plus, Trash2, Edit2, Check, X, Users, Search, Phone, FileText } from "lucide-react";
+import { Calendar, Clock, Plus, Trash2, Edit2, Check, X, Users, Search, Phone, FileText, UserPlus } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import API from "@/components/apiClient";
 import { useCallingTracker } from "../../components/my-list-com/useCallingTracker";
@@ -26,12 +26,20 @@ export default function ProgramScheduler() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [volunteers, setVolunteers] = useState<any[]>([]);
   const [selectedInviteIds, setSelectedInviteIds] = useState<string[]>([]);
-  
+
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
-  
+
+  // New profile state
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false);
+  const [newCustomerForm, setNewCustomerForm] = useState({
+    name: "",
+    phoneNumber: "",
+  });
+
   const [formData, setFormData] = useState({
     title: "",
     date: "",
@@ -53,6 +61,10 @@ export default function ProgramScheduler() {
     // When a call response is submitted, refresh the program invites list
     fetchPrograms();
   });
+
+  // State for direct response editing
+  const [activeEditCustomer, setActiveEditCustomer] = useState<any>(null);
+  const [activeEditProgramId, setActiveEditProgramId] = useState<string | null>(null);
 
   const fetchPrograms = async () => {
     try {
@@ -109,11 +121,13 @@ export default function ProgramScheduler() {
     socket.on("calling-stop", handleStop);
     socket.on("customer-update", handleUpdate);
     socket.on("attendance-update", handleUpdate);
+    socket.on("event-update", handleUpdate);
 
     return () => {
       socket.off("calling-stop", handleStop);
       socket.off("customer-update", handleUpdate);
       socket.off("attendance-update", handleUpdate);
+      socket.off("event-update", handleUpdate);
     };
   }, []);
 
@@ -128,7 +142,7 @@ export default function ProgramScheduler() {
   const handleSelectAllInvites = () => {
     const filtered = customers.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
     const filteredIds = filtered.map(c => c._id);
-    
+
     // Check if all filtered are already selected
     const allSelected = filteredIds.every(id => selectedInviteIds.includes(id));
     if (allSelected) {
@@ -137,6 +151,41 @@ export default function ProgramScheduler() {
     } else {
       // Select all filtered (keeping other selections)
       setSelectedInviteIds(Array.from(new Set([...selectedInviteIds, ...filteredIds])));
+    }
+  };
+
+  const handleCreateNewCustomer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCustomerForm.name || !newCustomerForm.phoneNumber) return;
+
+    setIsCreatingCustomer(true);
+    try {
+      const payload = {
+        ...newCustomerForm,
+        adderId: currentUser?.id,
+        typeOfCustomer: "Youth",
+        status: "new"
+      };
+      await API.addCustomer(payload);
+
+      // Refresh customers to get the new ID
+      const allCustRes = await API.getAllCustomers();
+      const latestList = allCustRes.data.data || [];
+      setCustomers(latestList);
+
+      const newCust = latestList.find((c: any) => c.phoneNumber === payload.phoneNumber && c.name === payload.name);
+
+      if (newCust) {
+        setSelectedInviteIds(prev => [...prev, newCust._id]);
+      }
+
+      setNewCustomerForm({ name: "", phoneNumber: "" });
+      toast.success("New youth registered & selected for invite!");
+      setShowNewForm(false);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to register youth");
+    } finally {
+      setIsCreatingCustomer(false);
     }
   };
 
@@ -160,6 +209,9 @@ export default function ProgramScheduler() {
           invitedCustomerIds: selectedInviteIds,
         });
         toast.success("Program updated successfully!");
+
+        const socket = getSocket();
+        socket.emit("event-update", { type: "update", id: editingId });
       } else {
         // Create program
         if (currentUser?.role !== "superAdmin") {
@@ -173,9 +225,10 @@ export default function ProgramScheduler() {
           invitedCustomerIds: selectedInviteIds,
         });
         toast.success("Program scheduled successfully!");
-        
+
         // Notify others of newly created event
         const socket = getSocket();
+        socket.emit("event-update", { type: "create" });
         socket.emit("new-notification", {
           type: "new-event",
           message: `New event scheduled: '${formData.title}'`,
@@ -217,6 +270,10 @@ export default function ProgramScheduler() {
       setLoading(true);
       await API.deleteProgram(id);
       toast.success("Program deleted.");
+
+      const socket = getSocket();
+      socket.emit("event-update", { type: "delete", id });
+
       if (activeTab === id) setActiveTab(null);
       fetchPrograms();
     } catch (err) {
@@ -255,7 +312,11 @@ export default function ProgramScheduler() {
   };
 
   const getResponseBadge = (response: string) => {
-    switch (response?.toLowerCase()) {
+    if (!response || response.toLowerCase() === "pending") {
+      return <span className="text-[9px] font-bold px-2 py-0.5 bg-neutral-50 dark:bg-zinc-800 text-neutral-400 dark:text-zinc-500 border border-neutral-200 dark:border-zinc-700 rounded-full">Pending</span>;
+    }
+
+    switch (response.toLowerCase()) {
       case "comes to youth class":
         return <span className="text-[9px] font-bold px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50 rounded-full">Comes to class</span>;
       case "try to come":
@@ -269,7 +330,8 @@ export default function ProgramScheduler() {
       case "not picked up":
         return <span className="text-[9px] font-bold px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50 rounded-full">No Answer</span>;
       default:
-        return <span className="text-[9px] font-bold px-2 py-0.5 bg-neutral-50 dark:bg-zinc-800 text-neutral-400 dark:text-zinc-500 border border-neutral-200 dark:border-zinc-700 rounded-full">Pending</span>;
+        // Render custom response
+        return <span className="text-[9px] font-bold px-2 py-0.5 bg-fuchsia-50 dark:bg-fuchsia-950/20 text-fuchsia-700 dark:text-fuchsia-400 border border-fuchsia-100 dark:border-fuchsia-900/50 rounded-full max-w-[120px] truncate block text-center" title={response}>{response}</span>;
     }
   };
 
@@ -314,15 +376,14 @@ export default function ProgramScheduler() {
             programs.map((program) => {
               const isExpanded = activeTab === program._id;
               const programDate = new Date(program.date);
-              
+
               return (
                 <div
                   key={program._id}
-                  className={`bg-white dark:bg-zinc-900 border rounded-2xl shadow-premium overflow-hidden transition-all duration-200 ${
-                    isExpanded 
-                      ? "border-indigo-200 dark:border-indigo-800/80 ring-2 ring-indigo-50 dark:ring-indigo-950/40" 
-                      : "border-neutral-100 dark:border-zinc-800/80 hover:border-neutral-200 dark:hover:border-zinc-750"
-                  }`}
+                  className={`bg-white dark:bg-zinc-900 border rounded-2xl shadow-premium overflow-hidden transition-all duration-200 ${isExpanded
+                    ? "border-indigo-200 dark:border-indigo-800/80 ring-2 ring-indigo-50 dark:ring-indigo-950/40"
+                    : "border-neutral-100 dark:border-zinc-800/80 hover:border-neutral-200 dark:hover:border-zinc-750"
+                    }`}
                 >
                   {/* Card Main Bar */}
                   <div
@@ -333,7 +394,7 @@ export default function ProgramScheduler() {
                       <h3 className="text-sm font-semibold text-neutral-800 dark:text-zinc-100 tracking-tight">
                         {program.title}
                       </h3>
-                      
+
                       <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-neutral-500 dark:text-zinc-400 font-sans">
                         <span className="flex items-center gap-1">
                           <Calendar size={13} className="text-neutral-400 dark:text-zinc-550" />
@@ -412,9 +473,8 @@ export default function ProgramScheduler() {
 
                         const renderInviteTable = (invitesList: any[], label: string, isMyList: boolean) => (
                           <div className="space-y-2">
-                            <h5 className={`text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-between ${
-                              isMyList ? "text-indigo-600 dark:text-indigo-400" : "text-neutral-500 dark:text-zinc-400"
-                            }`}>
+                            <h5 className={`text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-between ${isMyList ? "text-indigo-600 dark:text-indigo-400" : "text-neutral-500 dark:text-zinc-400"
+                              }`}>
                               <span>{label}</span>
                               <span className="px-1.5 py-0.5 rounded-full bg-neutral-100 dark:bg-zinc-800 text-[9px] font-bold text-neutral-500 dark:text-zinc-400">
                                 {invitesList.length}
@@ -426,72 +486,105 @@ export default function ProgramScheduler() {
                               </p>
                             ) : (
                               <div className="overflow-hidden rounded-xl border border-neutral-200/50 dark:border-zinc-800/80 bg-white dark:bg-zinc-900">
-                                <table className="min-w-full text-xs">
-                                  <thead>
-                                    <tr className="bg-neutral-50 dark:bg-zinc-950/40 border-b border-neutral-100 dark:border-zinc-800/80">
-                                      <th className="text-left font-bold text-neutral-500 dark:text-zinc-400 p-2.5 uppercase tracking-wider">Name</th>
-                                      <th className="text-left font-bold text-neutral-500 dark:text-zinc-400 p-2.5 uppercase tracking-wider">Assigned To</th>
-                                      <th className="text-left font-bold text-neutral-500 dark:text-zinc-400 p-2.5 uppercase tracking-wider">Call State</th>
-                                      <th className="text-right font-bold text-neutral-500 dark:text-zinc-400 p-2.5 uppercase tracking-wider">Action</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {invitesList.map((ic: any) => {
-                                      const c = ic.customerId;
-                                      if (!c) return null;
+                                {/* Desktop Header */}
+                                <div className="hidden sm:grid grid-cols-[2fr_1.5fr_1.5fr_auto] bg-neutral-50 dark:bg-zinc-950/40 border-b border-neutral-100 dark:border-zinc-800/80 p-2.5 gap-4">
+                                  <div className="font-bold text-neutral-500 dark:text-zinc-400 text-xs uppercase tracking-wider pl-1">Name</div>
+                                  <div className="font-bold text-neutral-500 dark:text-zinc-400 text-xs uppercase tracking-wider">Assigned To</div>
+                                  <div className="font-bold text-neutral-500 dark:text-zinc-400 text-xs uppercase tracking-wider">Call Response</div>
+                                  <div className="font-bold text-neutral-500 dark:text-zinc-400 text-xs uppercase tracking-wider text-right pr-1">Action</div>
+                                </div>
+                                <div className="flex flex-col">
+                                  {invitesList.map((ic: any) => {
+                                    const c = ic.customerId;
+                                    if (!c) return null;
 
-                                      const isCallingLocally = liveCallingStates[c._id]?.status === "calling" || c.callingStatus === "calling";
-                                      const caller = liveCallingStates[c._id]?.callingBy || c.callingBy;
+                                    const isCallingLocally = liveCallingStates[c._id]?.status === "calling" || c.callingStatus === "calling";
+                                    const caller = liveCallingStates[c._id]?.callingBy || c.callingBy;
 
-                                      return (
-                                        <tr key={ic._id || c._id} className="border-b border-neutral-100 dark:border-zinc-800/50 last:border-none hover:bg-neutral-50/30 dark:hover:bg-zinc-800/20 transition">
-                                          <td 
-                                            className="p-2.5 font-semibold text-neutral-800 dark:text-zinc-100 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
+                                    return (
+                                      <div key={ic._id || c._id} className="flex flex-col sm:grid sm:grid-cols-[2fr_1.5fr_1.5fr_auto] gap-3 sm:gap-4 p-3.5 sm:p-2.5 border-b border-neutral-100 dark:border-zinc-800/50 last:border-none hover:bg-neutral-50/30 dark:hover:bg-zinc-800/20 transition items-start sm:items-center">
+                                        
+                                        {/* Mobile Header Row (Name + Call Button) */}
+                                        <div className="flex justify-between items-start w-full sm:w-auto sm:contents">
+                                          <div
+                                            className="flex flex-col cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
                                             onClick={() => setSelectedCustomer(c)}
                                           >
-                                            <div className="flex flex-col">
-                                              <span>{c.name}</span>
-                                              <span className="text-[10px] text-neutral-400 dark:text-zinc-550 font-normal mt-0.5">{c.phoneNumber}</span>
-                                            </div>
-                                          </td>
-                                          <td className="p-2.5 text-neutral-600 dark:text-zinc-400">
-                                            <span className="text-[10px] font-medium">{getAssignedNames(c.whoCanFollowUp)}</span>
-                                          </td>
-                                          <td className="p-2.5">
-                                            <div className="flex flex-col gap-0.5">
+                                            <span className="font-bold text-neutral-800 dark:text-zinc-100 text-sm sm:text-xs">{c.name}</span>
+                                            <span className="text-[11px] sm:text-[10px] text-neutral-400 dark:text-zinc-550 font-normal mt-0.5">{c.phoneNumber}</span>
+                                          </div>
+                                          
+                                          {/* Mobile Action */}
+                                          <div className="sm:hidden shrink-0 ml-4">
+                                            <button
+                                              onClick={() => initiateCall(c, program._id)}
+                                              disabled={isCallingLocally && caller !== currentUser?.name}
+                                              className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 active:scale-95 ${isCallingLocally && caller !== currentUser?.name
+                                                ? "bg-neutral-100 dark:bg-zinc-800 text-neutral-400 dark:text-zinc-650 cursor-not-allowed shadow-none"
+                                                : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-100 dark:shadow-none"
+                                                }`}
+                                            >
+                                              <Phone size={12} /> Call
+                                            </button>
+                                          </div>
+                                        </div>
+
+                                        {/* Additional Info Row (Assigned To + Call State) */}
+                                        <div className="flex flex-wrap gap-x-6 gap-y-3 w-full sm:w-auto sm:contents mt-1 sm:mt-0">
+                                          <div className="flex flex-col gap-0.5 text-neutral-600 dark:text-zinc-400">
+                                            <span className="sm:hidden text-[9px] uppercase font-bold text-neutral-400 tracking-wider">Assigned To</span>
+                                            <span className="text-[12px] sm:text-[10px] font-medium text-neutral-700 dark:text-zinc-300">{getAssignedNames(c.whoCanFollowUp)}</span>
+                                          </div>
+                                          
+                                          <div className="flex flex-col gap-1 sm:gap-0.5">
+                                            <span className="sm:hidden text-[9px] uppercase font-bold text-neutral-400 tracking-wider">Call Response</span>
+                                            <div className="w-fit">
                                               {isCallingLocally ? (
-                                                <span className="text-[9px] font-extrabold px-2 py-0.5 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/50 rounded-full animate-pulse flex items-center gap-1 w-fit">
+                                                <span className="text-[9px] font-extrabold px-2 py-0.5 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/50 rounded-full animate-pulse flex items-center gap-1">
                                                   <Phone size={9} className="animate-bounce" />
                                                   <span>{caller} calling...</span>
                                                 </span>
                                               ) : (
-                                                getResponseBadge(ic.response)
-                                              )}
-                                              {ic.callingBy && (
-                                                <span className="text-[9px] text-neutral-400 dark:text-zinc-500 mt-0.5 font-sans">
-                                                  Done by: {ic.callingBy}
-                                                </span>
+                                                <div
+                                                  className="flex items-center gap-1.5 group cursor-pointer hover:opacity-80 transition"
+                                                  onClick={() => {
+                                                    setActiveEditCustomer(c);
+                                                    setActiveEditProgramId(program._id);
+                                                  }}
+                                                >
+                                                  {getResponseBadge(ic.response)}
+                                                  <div className="p-1 rounded-md bg-neutral-100 dark:bg-zinc-800 text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block">
+                                                    <Edit2 size={10} />
+                                                  </div>
+                                                </div>
                                               )}
                                             </div>
-                                          </td>
-                                          <td className="p-2.5 text-right">
-                                            <button
-                                              onClick={() => initiateCall(c, program._id)}
-                                              disabled={isCallingLocally && caller !== currentUser?.name}
-                                              className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition flex items-center gap-1 ml-auto active:scale-95 ${
-                                                isCallingLocally && caller !== currentUser?.name
-                                                  ? "bg-neutral-100 dark:bg-zinc-800 text-neutral-400 dark:text-zinc-650 cursor-not-allowed border-none shadow-none"
-                                                  : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+                                            {ic.callingBy && (
+                                              <span className="text-[10px] sm:text-[9px] text-neutral-400 dark:text-zinc-500 mt-0.5 font-sans">
+                                                Done by: {ic.callingBy}
+                                              </span>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        {/* Desktop Action */}
+                                        <div className="hidden sm:flex justify-end">
+                                          <button
+                                            onClick={() => initiateCall(c, program._id)}
+                                            disabled={isCallingLocally && caller !== currentUser?.name}
+                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition flex items-center gap-1 active:scale-95 ${isCallingLocally && caller !== currentUser?.name
+                                              ? "bg-neutral-100 dark:bg-zinc-800 text-neutral-400 dark:text-zinc-650 cursor-not-allowed shadow-none"
+                                              : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
                                               }`}
-                                            >
-                                              <Phone size={10} /> Call
-                                            </button>
-                                          </td>
-                                        </tr>
-                                      );
-                                    })}
-                                  </tbody>
-                                </table>
+                                          >
+                                            <Phone size={10} /> Call
+                                          </button>
+                                        </div>
+
+                                      </div>
+                                    );
+                                  })}
+                                </div>
                               </div>
                             )}
                           </div>
@@ -623,17 +716,26 @@ export default function ProgramScheduler() {
                 </div>
 
                 {/* Search checklist */}
-                <div className="relative mb-2">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-zinc-555">
-                    <Search size={12} />
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Search youth by name..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full premium-input pl-7 py-1 text-xs"
-                  />
+                <div className="flex gap-2 mb-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 dark:text-zinc-555">
+                      <Search size={12} />
+                    </span>
+                    <input
+                      type="text"
+                      placeholder="Search youth by name..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full premium-input !pl-8 py-1 text-xs"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewForm(true)}
+                    className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold rounded-lg border border-indigo-200/50 dark:border-indigo-800/50 flex items-center gap-1 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition whitespace-nowrap"
+                  >
+                    <UserPlus size={12} /> New
+                  </button>
                 </div>
 
                 {/* Youth checklist list wrapper */}
@@ -646,11 +748,10 @@ export default function ProgramScheduler() {
                       return (
                         <label
                           key={c._id}
-                          className={`flex items-center gap-2 p-1.5 rounded-lg text-xs cursor-pointer transition ${
-                            isChecked 
-                              ? "bg-indigo-50/50 dark:bg-indigo-950/30 font-semibold text-indigo-700 dark:text-indigo-400" 
-                              : "hover:bg-neutral-100/50 dark:hover:bg-zinc-800/40 text-neutral-600 dark:text-zinc-400"
-                          }`}
+                          className={`flex items-center gap-2 p-1.5 rounded-lg text-xs cursor-pointer transition ${isChecked
+                            ? "bg-indigo-50/50 dark:bg-indigo-950/30 font-semibold text-indigo-700 dark:text-indigo-400"
+                            : "hover:bg-neutral-100/50 dark:hover:bg-zinc-800/40 text-neutral-600 dark:text-zinc-400"
+                            }`}
                         >
                           <input
                             type="checkbox"
@@ -690,6 +791,79 @@ export default function ProgramScheduler() {
         </div>
       )}
 
+      {/* NEW PROFILE SUB-MODAL */}
+      {showNewForm && (
+        <div
+          className="fixed inset-0 bg-neutral-950/60 dark:bg-neutral-950/80 flex items-center justify-center z-[60] p-4 backdrop-blur-sm"
+          onClick={() => setShowNewForm(false)}
+        >
+          <div
+            className="bg-white dark:bg-zinc-900 border border-neutral-200 dark:border-zinc-800 w-full max-w-sm p-5 sm:p-6 rounded-3xl shadow-2xl overflow-hidden max-h-[85dvh] animate-slideUp flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 rounded-xl">
+                  <UserPlus size={18} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-neutral-800 dark:text-zinc-100">Register New Youth</h3>
+                  <p className="text-[10px] text-neutral-500 dark:text-zinc-400">Create profile and invite</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowNewForm(false)}
+                className="p-2 bg-neutral-50 dark:bg-zinc-950 border border-neutral-200 dark:border-zinc-800 hover:bg-neutral-100 dark:hover:bg-zinc-800 rounded-full transition-colors text-neutral-500"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateNewCustomer} className="flex flex-col flex-1 h-full">
+              <div className="flex-1 overflow-y-auto space-y-4 pb-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-neutral-400 dark:text-zinc-550 uppercase tracking-wider mb-1.5">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newCustomerForm.name}
+                    onChange={(e) => setNewCustomerForm({ ...newCustomerForm, name: e.target.value })}
+                    className="w-full premium-input text-xs py-2.5"
+                    placeholder="e.g. John Doe"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-neutral-400 dark:text-zinc-550 uppercase tracking-wider mb-1.5">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={newCustomerForm.phoneNumber}
+                    onChange={(e) => setNewCustomerForm({ ...newCustomerForm, phoneNumber: e.target.value })}
+                    className="w-full premium-input text-xs py-2.5"
+                    placeholder="e.g. 9876543210"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 mt-2 shrink-0">
+                <button
+                  type="submit"
+                  disabled={isCreatingCustomer || !newCustomerForm.name || !newCustomerForm.phoneNumber}
+                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition active:scale-95 shadow-md shadow-indigo-50/50 disabled:opacity-50 disabled:active:scale-100"
+                >
+                  {isCreatingCustomer ? "Registering..." : <><Check size={16} strokeWidth={3} /> Register & Select</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* CALL FEEDBACK MODAL OVERLAY */}
       {activeCallCustomer && (
         <CallResponseModal
@@ -697,6 +871,21 @@ export default function ProgramScheduler() {
           currentUser={currentUser}
           programId={activeCallProgramId || undefined}
           onClose={handleModalClose}
+        />
+      )}
+
+      {/* EDIT RESPONSE MODAL OVERLAY */}
+      {activeEditCustomer && (
+        <CallResponseModal
+          customer={activeEditCustomer}
+          currentUser={currentUser}
+          programId={activeEditProgramId || undefined}
+          isEditMode={true}
+          onClose={() => {
+            setActiveEditCustomer(null);
+            setActiveEditProgramId(null);
+            fetchPrograms();
+          }}
         />
       )}
 
