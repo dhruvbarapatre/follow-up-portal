@@ -141,7 +141,10 @@ const Home: React.FC = () => {
       {/* Footer Branding */}
       <div className="text-center py-4 shrink-0">
         <p className="text-[10px] text-neutral-400 dark:text-zinc-500 font-medium uppercase tracking-wider flex items-center justify-center gap-1">
-          Made with <Heart size={10} className="fill-rose-400 stroke-rose-400" /> for community followups
+          Made For <Heart size={10} className="fill-rose-400 stroke-rose-400" /> Remove Gap Between Comnication
+        </p>
+        <p className="text-[10px] text-neutral-400 dark:text-zinc-500 font-medium uppercase tracking-wider flex items-center justify-center gap-1">
+          In Service of Guru and Gauranga
         </p>
       </div>
 
