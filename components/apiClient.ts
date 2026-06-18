@@ -26,7 +26,7 @@ const API = {
   getAdmins: () => api.get("/admins/get-admins"),
 
   // ATTENDANCE
-  getPrograms: () => api.get("/attendence/list"),
+  getPrograms: () => api.get("/attendence/list?t=" + Date.now()),
   createProgram: (data: any) => api.post("/attendence/create", data),
   updateProgram: (data: any) => api.put("/attendence/update", data),
   deleteProgram: (id: string) => api.delete("/attendence/delete", { data: { id } }),

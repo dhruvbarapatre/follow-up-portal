@@ -90,8 +90,9 @@ export default function CallResponseModal({
               invitedCustomers: updatedInvites,
             });
           }
-        } catch (progErr) {
+        } catch (progErr: any) {
           console.error("Failed to update program invite response:", progErr);
+          toast.error("Failed to update event invite: " + (progErr.response?.data?.message || progErr.message));
         }
       }
 
@@ -179,8 +180,9 @@ export default function CallResponseModal({
               invitedCustomers: updatedInvites,
             });
           }
-        } catch (progErr) {
+        } catch (progErr: any) {
           console.error("Failed to update program invite response:", progErr);
+          toast.error("Failed to update event invite: " + (progErr.response?.data?.message || progErr.message));
         }
       }
 
@@ -248,8 +250,9 @@ export default function CallResponseModal({
               invitedCustomers: updatedInvites,
             });
           }
-        } catch (progErr) {
+        } catch (progErr: any) {
           console.error("Failed to clear program invite call status:", progErr);
+          toast.error("Failed to update event invite: " + (progErr.response?.data?.message || progErr.message));
         }
       }
 
