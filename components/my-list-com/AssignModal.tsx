@@ -63,8 +63,14 @@ export default function AssignModal({ customer, users, onClose, reload }: any) {
   };
 
   return (
-    <div className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/60 flex items-center justify-center z-50 p-4 backdrop-blur-md">
-      <div className="bg-white dark:bg-zinc-900 border border-neutral-100 dark:border-zinc-800 w-full max-w-md p-4 sm:p-6 rounded-2xl shadow-xl overflow-y-auto max-h-[90%] animate-slideUp">
+    <div 
+      className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/60 flex items-center justify-center z-50 p-4 backdrop-blur-md"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white dark:bg-zinc-900 border border-neutral-100 dark:border-zinc-800 w-full max-w-md p-4 sm:p-6 rounded-2xl shadow-xl overflow-y-auto max-h-[90%] animate-slideUp"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex justify-between items-center mb-5 pb-3 border-b border-neutral-100 dark:border-zinc-800/80">
           <div className="flex items-center gap-2">

@@ -118,12 +118,14 @@ export default function ProgramScheduler() {
       fetchCustomers();
     };
 
+    socket.on("calling-start", handleUpdate);
     socket.on("calling-stop", handleStop);
     socket.on("customer-update", handleUpdate);
     socket.on("attendance-update", handleUpdate);
     socket.on("event-update", handleUpdate);
 
     return () => {
+      socket.off("calling-start", handleUpdate);
       socket.off("calling-stop", handleStop);
       socket.off("customer-update", handleUpdate);
       socket.off("attendance-update", handleUpdate);

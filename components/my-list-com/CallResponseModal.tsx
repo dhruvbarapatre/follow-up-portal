@@ -264,8 +264,14 @@ export default function CallResponseModal({
 
   if (showOutOfStationForm) {
     return (
-      <div className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/60 flex items-center justify-center z-50 p-4 backdrop-blur-md">
-        <div className="bg-white dark:bg-zinc-900 border border-neutral-100 dark:border-zinc-800 w-full max-w-md rounded-2xl shadow-xl overflow-y-auto max-h-[90%] animate-slideUp">
+      <div 
+        className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/60 flex items-center justify-center z-50 p-4 backdrop-blur-md"
+        onClick={() => setShowOutOfStationForm(false)}
+      >
+        <div 
+          className="bg-white dark:bg-zinc-900 border border-neutral-100 dark:border-zinc-800 w-full max-w-md rounded-2xl shadow-xl overflow-y-auto max-h-[90%] animate-slideUp"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Header */}
           <div className="p-5 border-b border-neutral-100 dark:border-zinc-800/80 flex justify-between items-center">
             <div className="flex items-center gap-2">
@@ -345,8 +351,14 @@ export default function CallResponseModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/60 flex items-center justify-center z-50 p-4 backdrop-blur-md">
-      <div className="bg-white dark:bg-zinc-900 border border-neutral-100 dark:border-zinc-800 w-full max-w-md rounded-2xl shadow-xl overflow-y-auto max-h-[90%] animate-slideUp">
+    <div 
+      className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/60 flex items-center justify-center z-50 p-4 backdrop-blur-md"
+      onClick={handleCancel}
+    >
+      <div 
+        className="bg-white dark:bg-zinc-900 border border-neutral-100 dark:border-zinc-800 w-full max-w-md rounded-2xl shadow-xl overflow-y-auto max-h-[90%] animate-slideUp"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="p-5 border-b border-neutral-100 dark:border-zinc-800/80 flex justify-between items-center">
           <div className="flex items-center gap-2">
