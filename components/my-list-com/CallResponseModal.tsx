@@ -67,21 +67,24 @@ export default function CallResponseModal({
           const programs = progRes.data.data || [];
           const activeProg = programs.find((p: any) => p._id === programId);
           if (activeProg) {
-            const updatedInvites = activeProg.invitedCustomers.map((ic: any) => {
-              if (ic.customerId?._id === customer._id) {
+            const updatedInvites = activeProg.invitedCustomers
+              .filter((ic: any) => ic.customerId !== null && ic.customerId !== undefined)
+              .map((ic: any) => {
+                const cid = ic.customerId?._id || ic.customerId;
+                if (cid === customer._id) {
+                  return {
+                    ...ic,
+                    customerId: customer._id,
+                    status: "called",
+                    response: responseVal,
+                    callingBy: currentUser?.name || "Admin",
+                  };
+                }
                 return {
                   ...ic,
-                  customerId: customer._id,
-                  status: "called",
-                  response: responseVal,
-                  callingBy: currentUser?.name || "Admin",
+                  customerId: cid,
                 };
-              }
-              return {
-                ...ic,
-                customerId: ic.customerId?._id || ic.customerId,
-              };
-            });
+              });
             await API.updateProgram({
               id: programId,
               invitedCustomers: updatedInvites,
@@ -153,21 +156,24 @@ export default function CallResponseModal({
           const programs = progRes.data.data || [];
           const activeProg = programs.find((p: any) => p._id === programId);
           if (activeProg) {
-            const updatedInvites = activeProg.invitedCustomers.map((ic: any) => {
-              if (ic.customerId?._id === customer._id) {
+            const updatedInvites = activeProg.invitedCustomers
+              .filter((ic: any) => ic.customerId !== null && ic.customerId !== undefined)
+              .map((ic: any) => {
+                const cid = ic.customerId?._id || ic.customerId;
+                if (cid === customer._id) {
+                  return {
+                    ...ic,
+                    customerId: customer._id,
+                    status: "called",
+                    response: responseVal,
+                    callingBy: currentUser?.name || "Admin",
+                  };
+                }
                 return {
                   ...ic,
-                  customerId: customer._id,
-                  status: "called",
-                  response: responseVal,
-                  callingBy: currentUser?.name || "Admin",
+                  customerId: cid,
                 };
-              }
-              return {
-                ...ic,
-                customerId: ic.customerId?._id || ic.customerId,
-              };
-            });
+              });
             await API.updateProgram({
               id: programId,
               invitedCustomers: updatedInvites,
@@ -221,19 +227,22 @@ export default function CallResponseModal({
           const progRes = await API.getPrograms();
           const activeProg = (progRes.data.data || []).find((p: any) => p._id === programId);
           if (activeProg) {
-            const updatedInvites = activeProg.invitedCustomers.map((ic: any) => {
-              if (ic.customerId?._id === customer._id) {
+            const updatedInvites = activeProg.invitedCustomers
+              .filter((ic: any) => ic.customerId !== null && ic.customerId !== undefined)
+              .map((ic: any) => {
+                const cid = ic.customerId?._id || ic.customerId;
+                if (cid === customer._id) {
+                  return {
+                    ...ic,
+                    customerId: customer._id,
+                    callingBy: "",
+                  };
+                }
                 return {
                   ...ic,
-                  customerId: customer._id,
-                  callingBy: "",
+                  customerId: cid,
                 };
-              }
-              return {
-                ...ic,
-                customerId: ic.customerId?._id || ic.customerId,
-              };
-            });
+              });
             await API.updateProgram({
               id: programId,
               invitedCustomers: updatedInvites,
