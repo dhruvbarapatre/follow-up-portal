@@ -14,15 +14,10 @@ export const getSocket = (): Socket => {
       });
     } else {
       // Local development: use local Next.js API route
-      if (typeof window !== "undefined") {
-        fetch("/api/socket").catch((err) =>
-          console.error("Failed to initialize Next.js socket handler:", err)
-        );
-      }
+      // Use default transports (polling -> websocket) to automatically boot Next.js handler
       socketInstance = io(typeof window !== "undefined" ? window.location.origin : "", {
         path: "/api/socket",
         autoConnect: false,
-        transports: ["websocket"],
       });
     }
 
