@@ -10,6 +10,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   await dbConnect();
 
+  // Prevent tree-shaking of CustomerModel in production builds
+  const _ = CustomerModel;
+
   try {
     const { id, title, date, time, description, invitedCustomerIds, invitedCustomers } = req.body;
 

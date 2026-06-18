@@ -6,6 +6,9 @@ import CustomerModel from "@/models/customer.model"; // Ensure model registratio
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await dbConnect();
 
+  // Prevent tree-shaking of CustomerModel in production builds
+  const _ = CustomerModel;
+
   try {
     const list = await Attendance.find({})
       .populate("invitedCustomers.customerId")
