@@ -471,6 +471,17 @@ export default function ProgramScheduler() {
                           return !assignedIds.includes(currentUser?.id);
                         });
 
+                        const sortPendingFirst = (a: any, b: any) => {
+                          const aPending = !a.response || a.response.toLowerCase() === "pending";
+                          const bPending = !b.response || b.response.toLowerCase() === "pending";
+                          if (aPending && !bPending) return -1;
+                          if (!aPending && bPending) return 1;
+                          return 0;
+                        };
+
+                        const sortedMyInvites = [...myInvites].sort(sortPendingFirst);
+                        const sortedOtherInvites = [...otherInvites].sort(sortPendingFirst);
+
                         const renderInviteTable = (invitesList: any[], label: string, isMyList: boolean) => (
                           <div className="space-y-2">
                             <h5 className={`text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-between ${isMyList ? "text-indigo-600 dark:text-indigo-400" : "text-neutral-500 dark:text-zinc-400"
@@ -592,9 +603,9 @@ export default function ProgramScheduler() {
 
                         return (
                           <div className="space-y-4 w-full">
-                            {renderInviteTable(myInvites, "Assigned to Me", true)}
+                            {renderInviteTable(sortedMyInvites, "Assigned to Me", true)}
                             <div className="border-t border-neutral-100 dark:border-zinc-800/80 my-2 pt-2"></div>
-                            {renderInviteTable(otherInvites, "Others / Unassigned", false)}
+                            {renderInviteTable(sortedOtherInvites, "Others / Unassigned", false)}
                           </div>
                         );
                       })()}

@@ -64,7 +64,7 @@ export default function AssignModal({ customer, users, onClose, reload }: any) {
 
   return (
     <div className="fixed inset-0 bg-neutral-950/40 dark:bg-neutral-950/60 flex items-center justify-center z-50 p-4 backdrop-blur-md">
-      <div className="bg-white dark:bg-zinc-900 border border-neutral-100 dark:border-zinc-800 w-full max-w-md p-6 rounded-2xl shadow-xl overflow-y-auto max-h-[90%] animate-slideUp">
+      <div className="bg-white dark:bg-zinc-900 border border-neutral-100 dark:border-zinc-800 w-full max-w-md p-4 sm:p-6 rounded-2xl shadow-xl overflow-y-auto max-h-[90%] animate-slideUp">
         {/* Header */}
         <div className="flex justify-between items-center mb-5 pb-3 border-b border-neutral-100 dark:border-zinc-800/80">
           <div className="flex items-center gap-2">
@@ -76,7 +76,7 @@ export default function AssignModal({ customer, users, onClose, reload }: any) {
               <p className="text-xs text-neutral-500 dark:text-zinc-400">Allocate youth to follow-up doers</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-neutral-100 dark:hover:bg-zinc-800 rounded-full transition-colors text-neutral-400 dark:text-zinc-500 hover:text-neutral-600 dark:hover:text-zinc-300">
+          <button onClick={onClose} className="p-1 hover:bg-neutral-100 dark:hover:bg-zinc-800 rounded-full transition-colors text-neutral-400 dark:text-zinc-550 hover:text-neutral-600 dark:hover:text-zinc-300">
             <X size={18} />
           </button>
         </div>
@@ -84,7 +84,7 @@ export default function AssignModal({ customer, users, onClose, reload }: any) {
         {/* Customer Detail Card */}
         <div className="bg-neutral-50 dark:bg-zinc-950/40 p-4 rounded-xl mb-5 border border-transparent dark:border-zinc-800/50">
           <p className="font-semibold text-neutral-800 dark:text-zinc-100 text-sm">{customer.name}</p>
-          <p className="text-xs text-neutral-400 dark:text-zinc-500 mt-0.5">{customer.phoneNumber}</p>
+          <p className="text-xs text-neutral-450 dark:text-zinc-500 mt-0.5">{customer.phoneNumber}</p>
         </div>
 
         {/* User Select */}
@@ -94,7 +94,7 @@ export default function AssignModal({ customer, users, onClose, reload }: any) {
             <select
               value={selected}
               onChange={(e) => setSelected(e.target.value)}
-              className="flex-1 premium-input py-2 text-xs bg-white dark:bg-zinc-900 text-neutral-800 dark:text-zinc-100"
+              className="flex-1 min-w-0 w-full premium-input py-2 text-xs bg-white dark:bg-zinc-900 text-neutral-800 dark:text-zinc-100"
             >
               <option value="">-- Choose User --</option>
               {userList?.map((u: any) => (
@@ -106,7 +106,7 @@ export default function AssignModal({ customer, users, onClose, reload }: any) {
 
             <button
               onClick={handleAdd}
-              className="px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1 transition active:scale-95 duration-200"
+              className="px-4 shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1 transition active:scale-95 duration-200"
             >
               <UserPlus size={14} /> Add
             </button>

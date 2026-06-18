@@ -10,25 +10,28 @@ export function useCallingTracker(currentUser: any, onCallReturned?: (response?:
     const socket = getSocket();
     socket.connect();
 
-    // Listen for real-time states
-    socket.on("calling-start", (data: any) => {
+    const handleCallingStart = (data: any) => {
       setLiveCallingStates((prev) => ({
         ...prev,
         [data.customerId]: { callingBy: data.userName, status: "calling" },
       }));
-    });
+    };
 
-    socket.on("calling-stop", (data: any) => {
+    const handleCallingStop = (data: any) => {
       setLiveCallingStates((prev) => {
         const next = { ...prev };
         delete next[data.customerId];
         return next;
       });
-    });
+    };
+
+    // Listen for real-time states
+    socket.on("calling-start", handleCallingStart);
+    socket.on("calling-stop", handleCallingStop);
 
     return () => {
-      socket.off("calling-start");
-      socket.off("calling-stop");
+      socket.off("calling-start", handleCallingStart);
+      socket.off("calling-stop", handleCallingStop);
     };
   }, []);
 
