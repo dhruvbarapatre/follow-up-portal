@@ -211,6 +211,21 @@ export default function AttendanceManager() {
       };
       await API.addCustomer(payload);
 
+      // Emit socket notification
+      try {
+        const socket = getSocket();
+        socket.connect();
+        socket.emit("customer-update", { name: payload.name });
+        socket.emit("new-notification", {
+          type: "new-youth",
+          message: `🆕 New youth registered: '${payload.name}' by ${currentUser?.name || "Admin"}`,
+          createdAt: new Date(),
+          customerName: payload.name,
+        });
+      } catch (sockErr) {
+        console.error("Socket emit failed", sockErr);
+      }
+
       // Refresh customers to get the new ID
       const allCustRes = await API.getAllCustomers();
       const latestList = allCustRes.data.data || [];

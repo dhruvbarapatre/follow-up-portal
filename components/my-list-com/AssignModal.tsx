@@ -43,6 +43,7 @@ export default function AssignModal({ customer, users, onClose, reload }: any) {
       try {
         const socket = getSocket();
         socket.connect();
+        socket.emit("customer-update", { customerId: customer._id });
         socket.emit("new-notification", {
           type: "new-assignment",
           message: `Customer '${customer.name}' assigned to you`,

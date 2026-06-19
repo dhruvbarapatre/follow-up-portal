@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { loginSuccess } from "@/components/slices/authSlice";
 import { useRouter } from "next/router";
 import { PersistData } from "../components/my-list-com/types";
+import { getSocket } from "@/lib/socket";
 import { UserPlus, Heart, Sparkles, Users, BarChart3, AlertTriangle, UserCheck, Phone, Briefcase, FileText, User } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -65,6 +66,22 @@ const Home: React.FC = () => {
       setLoading(true);
       const res = await axios.post("/api/customer/add-customer", payload);
       toast.success(res.data.message || "Youth added successfully!");
+      
+      // Emit socket notification
+      try {
+        const socket = getSocket();
+        socket.connect();
+        socket.emit("customer-update", { name });
+        socket.emit("new-notification", {
+          type: "new-youth",
+          message: `🆕 New youth registered: '${name}' by ${authState?.user?.name || "Admin"}`,
+          createdAt: new Date(),
+          customerName: name,
+        });
+      } catch (sockErr) {
+        console.error("Socket emit failed", sockErr);
+      }
+
       closeModal();
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to add.");

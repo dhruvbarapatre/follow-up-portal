@@ -10,7 +10,6 @@ export const getSocket = (): Socket => {
       // Production: use external dedicated Socket.io server (e.g. Render)
       socketInstance = io(socketUrl, {
         autoConnect: false,
-        transports: ["websocket"],
       });
     } else {
       // Local development: use local Next.js API route

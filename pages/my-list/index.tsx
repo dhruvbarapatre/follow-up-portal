@@ -10,6 +10,7 @@ import { PersistData } from "../../components/my-list-com/types";
 import API from "@/components/apiClient";
 import CustomerTable from "@/components/my-list-com/CustomerTable";
 import { useCallingTracker } from "../../components/my-list-com/useCallingTracker";
+import { getSocket } from "@/lib/socket";
 import "react-toastify/dist/ReactToastify.css";
 
 const UserListPage = () => {
@@ -94,6 +95,32 @@ const UserListPage = () => {
       loadCustomerList(selectedUserId);
     }
   }, [selectedUserId]);
+
+  // Real-time synchronization for changes (assignments, edits, attendance) via WebSockets
+  useEffect(() => {
+    const socket = getSocket();
+    socket.connect();
+
+    const handleUpdate = () => {
+      console.log("MyList: Received live update event");
+      if (selectedUserId) {
+        loadCustomerList(selectedUserId);
+      }
+      if (auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") {
+        loadUnreserved();
+      }
+    };
+
+    socket.on("customer-update", handleUpdate);
+    socket.on("attendance-update", handleUpdate);
+    socket.on("event-update", handleUpdate);
+
+    return () => {
+      socket.off("customer-update", handleUpdate);
+      socket.off("attendance-update", handleUpdate);
+      socket.off("event-update", handleUpdate);
+    };
+  }, [selectedUserId, auth?.user?.role]);
 
   // --------- Loader Component ----------
   const Loader = () => (

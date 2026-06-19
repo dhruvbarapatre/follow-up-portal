@@ -68,8 +68,10 @@ export default function ProgramScheduler() {
 
   const fetchPrograms = async () => {
     try {
+      console.log("EventPage: Fetching programs...");
       const res = await API.getPrograms();
       setPrograms(res.data.data || []);
+      console.log("EventPage: Programs fetched successfully:", res.data.data);
     } catch (err) {
       toast.error("Failed to load scheduled programs");
     }
@@ -77,8 +79,10 @@ export default function ProgramScheduler() {
 
   const fetchCustomers = async () => {
     try {
+      console.log("EventPage: Fetching customers...");
       const res = await API.getAllCustomers();
       setCustomers(res.data.data || []);
+      console.log("EventPage: Customers fetched successfully");
     } catch (err) {
       toast.error("Failed to load customer list");
     }
@@ -109,24 +113,17 @@ export default function ProgramScheduler() {
     const socket = getSocket();
     socket.connect();
 
-    const handleStop = () => {
-      fetchPrograms();
-    };
-
-    const handleUpdate = () => {
+    const handleUpdate = (data: any) => {
+      console.log("EventPage: Received update event (customer-update/attendance-update/etc):", data);
       fetchPrograms();
       fetchCustomers();
     };
 
-    socket.on("calling-start", handleUpdate);
-    socket.on("calling-stop", handleStop);
     socket.on("customer-update", handleUpdate);
     socket.on("attendance-update", handleUpdate);
     socket.on("event-update", handleUpdate);
 
     return () => {
-      socket.off("calling-start", handleUpdate);
-      socket.off("calling-stop", handleStop);
       socket.off("customer-update", handleUpdate);
       socket.off("attendance-update", handleUpdate);
       socket.off("event-update", handleUpdate);
@@ -169,6 +166,21 @@ export default function ProgramScheduler() {
         status: "new"
       };
       await API.addCustomer(payload);
+
+      // Emit socket notification
+      try {
+        const socket = getSocket();
+        socket.connect();
+        socket.emit("customer-update", { name: payload.name });
+        socket.emit("new-notification", {
+          type: "new-youth",
+          message: `🆕 New youth registered: '${payload.name}' by ${currentUser?.name || "Admin"}`,
+          createdAt: new Date(),
+          customerName: payload.name,
+        });
+      } catch (sockErr) {
+        console.error("Socket emit failed", sockErr);
+      }
 
       // Refresh customers to get the new ID
       const allCustRes = await API.getAllCustomers();

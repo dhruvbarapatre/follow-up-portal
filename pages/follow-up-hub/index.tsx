@@ -58,8 +58,21 @@ const UserListPage = () => {
     });
     socket.emit("request-online-users");
 
+    const handleUpdate = () => {
+      console.log("FollowUpHub: Received live update event");
+      loadCustomerList();
+      loadUsers();
+    };
+
+    socket.on("customer-update", handleUpdate);
+    socket.on("attendance-update", handleUpdate);
+    socket.on("event-update", handleUpdate);
+
     return () => {
       socket.off("online-users-list");
+      socket.off("customer-update", handleUpdate);
+      socket.off("attendance-update", handleUpdate);
+      socket.off("event-update", handleUpdate);
     };
   }, []);
 

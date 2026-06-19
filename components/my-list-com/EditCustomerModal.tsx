@@ -111,15 +111,17 @@ export default function EditCustomerModal({
         updateData: edited,
       });
 
-      // Emit notification for newly assigned users
-      const originalDoers = original?.whoCanFollowUp || [];
-      const editedDoers = edited?.whoCanFollowUp || [];
-      const newlyAssigned = editedDoers.filter((uid: string) => !originalDoers.includes(uid));
+      // Emit socket update and notifications
+      try {
+        const socket = getSocket();
+        socket.connect();
+        socket.emit("customer-update", { customerId: customer._id });
 
-      if (newlyAssigned.length > 0) {
-        try {
-          const socket = getSocket();
-          socket.connect();
+        const originalDoers = original?.whoCanFollowUp || [];
+        const editedDoers = edited?.whoCanFollowUp || [];
+        const newlyAssigned = editedDoers.filter((uid: string) => !originalDoers.includes(uid));
+
+        if (newlyAssigned.length > 0) {
           socket.emit("new-notification", {
             type: "new-assignment",
             message: `Customer '${edited.name}' assigned to you`,
@@ -128,9 +130,9 @@ export default function EditCustomerModal({
             assignedUserIds: newlyAssigned,
             assignedBy: currentUser?.name || "Admin",
           });
-        } catch (sockErr) {
-          console.error("Socket emit failed", sockErr);
         }
+      } catch (sockErr) {
+        console.error("Socket emit failed", sockErr);
       }
 
       setDirty(false);
