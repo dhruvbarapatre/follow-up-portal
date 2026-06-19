@@ -3,7 +3,10 @@ import dbConnect from "@/lib/dbConnect";
 import Attendance from "@/models/attendence.model";
 import CustomerModel from "@/models/customer.model"; // Ensure model registration
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "PUT") {
     return res.status(405).json({ message: "Method Not Allowed" });
   }
@@ -14,7 +17,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const _ = CustomerModel;
 
   try {
-    const { id, title, date, time, description, invitedCustomerIds, invitedCustomers } = req.body;
+    const {
+      id,
+      title,
+      date,
+      time,
+      description,
+      invitedCustomerIds,
+      invitedCustomers,
+    } = req.body;
 
     if (!id) {
       return res.status(400).json({ message: "Program ID is required" });
@@ -31,9 +42,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else if (invitedCustomerIds !== undefined) {
       const existing = await Attendance.findById(id);
       const existingInvites = existing?.invitedCustomers || [];
-      
+
       updateObj.invitedCustomers = invitedCustomerIds.map((cid: string) => {
-        const found = existingInvites.find((x: any) => x.customerId?.toString() === cid);
+        const found = existingInvites.find(
+          (x: any) => x.customerId?.toString() === cid
+        );
         if (found) return found;
         return {
           customerId: cid,
@@ -44,11 +57,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    const updated = await Attendance.findByIdAndUpdate(id, updateObj, { new: true })
-      .populate("invitedCustomers.customerId");
+    const updated = await Attendance.findByIdAndUpdate(id, updateObj, {
+      returnDocument: "after",
+    }).populate("invitedCustomers.customerId");
 
-    return res.status(200).json({ message: "Program updated successfully", data: updated });
+    return res
+      .status(200)
+      .json({ message: "Program updated successfully", data: updated });
   } catch (error: any) {
-    return res.status(400).json({ message: "Error updating program", error: error.message });
+    return res
+      .status(400)
+      .json({ message: "Error updating program", error: error.message });
   }
 }
