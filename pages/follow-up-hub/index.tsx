@@ -48,6 +48,8 @@ const UserListPage = () => {
   };
 
   useEffect(() => {
+    if (!auth?.token) return;
+
     loadUsers();
     loadCustomerList();
 
@@ -74,7 +76,7 @@ const UserListPage = () => {
       socket.off("attendance-update", handleUpdate);
       socket.off("event-update", handleUpdate);
     };
-  }, []);
+  }, [auth?.token]);
 
   const Loader = () => (
     <div className="flex justify-center py-12">

@@ -78,11 +78,13 @@ const UserListPage = () => {
   };
 
   useEffect(() => {
-    loadUsers(); // load users for mapping doer names & dropdowns for all roles
-    if (auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") {
-      loadUnreserved();
+    if (auth?.token) {
+      loadUsers(); // load users for mapping doer names & dropdowns for all roles
+      if (auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") {
+        loadUnreserved();
+      }
     }
-  }, []);
+  }, [auth?.token, auth?.user?.role]);
 
   useEffect(() => {
     if (auth?.user?.id) {

@@ -98,11 +98,9 @@ export default function ProgramScheduler() {
   };
 
   useEffect(() => {
+    if (!auth?.token) return;
     setLoading(true);
-    const promises = [fetchPrograms(), fetchCustomers()];
-    if (auth?.token) {
-      promises.push(fetchVolunteers());
-    }
+    const promises = [fetchPrograms(), fetchCustomers(), fetchVolunteers()];
     Promise.all(promises).finally(() => {
       setLoading(false);
     });

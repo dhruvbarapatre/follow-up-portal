@@ -42,6 +42,8 @@ const UserListPage = () => {
     };
 
     useEffect(() => {
+        if (!auth?.token) return;
+
         if (auth?.user?.role === "superAdmin" || auth?.user?.role === "admin") {
             loadUsers();
             loadUnreserved();
@@ -57,7 +59,7 @@ const UserListPage = () => {
         return () => {
             socket.off("online-users-list");
         };
-    }, []);
+    }, [auth?.token, auth?.user?.role]);
 
     const Loader = () => (
         <div className="flex justify-center py-12">

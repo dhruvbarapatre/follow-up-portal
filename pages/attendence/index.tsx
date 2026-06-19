@@ -82,15 +82,13 @@ export default function AttendanceManager() {
   };
 
   useEffect(() => {
+    if (!auth?.token) return;
     setLoading(true);
-    const promises = [fetchEventsAndAttendance()];
-    if (currentUser) {
-      promises.push(fetchAllCustomers());
-    }
+    const promises = [fetchEventsAndAttendance(), fetchAllCustomers()];
     Promise.all(promises).finally(() => {
       setLoading(false);
     });
-  }, [currentUser]);
+  }, [auth?.token]);
 
   // Sync selectedEvent updates seamlessly via sockets if no local changes
   useEffect(() => {

@@ -20,6 +20,8 @@ export default function ContactsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth?.token) return;
+
     const fetchAdmins = async () => {
       setLoading(true);
       try {
@@ -36,7 +38,7 @@ export default function ContactsPage() {
     };
 
     fetchAdmins();
-  }, [auth.token]);
+  }, [auth?.token]);
 
   // Initials for avatar
   const getInitials = (name: string) => {
